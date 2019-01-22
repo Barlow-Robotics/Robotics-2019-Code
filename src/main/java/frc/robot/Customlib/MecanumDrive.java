@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj.drive.Vector2d;
 
 public class MecanumDrive{
 
-    private double[] speedMods = {1,1,1,1};
+    private double[] speedMods = {.8,1,.8,.8};
     private PWMSpeedController LFront,RFront,LBack,RBack;
     private Joystick joyStick;
     public class NonNormalizedNumber extends Exception{public NonNormalizedNumber(String message){super(message);}};

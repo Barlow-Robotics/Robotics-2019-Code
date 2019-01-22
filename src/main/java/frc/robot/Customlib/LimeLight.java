@@ -18,6 +18,7 @@ public class LimeLight {
 	public double camMode;
 	public double pipeline;
 	public double horiz;
+	public double vert;
 
 	//Limelight specs will be stored in this class
 	class specs{
@@ -106,6 +107,18 @@ public class LimeLight {
 		return horiz;
 	}
 	
+	public double getVerticalLength(){
+		vert = getLimetable().getEntry("tvert").getDouble(0);
+		return vert;
+	}
+
+	public double getLong(){
+		return getLimetable().getEntry("tlong").getDouble(0);
+	}
+	public double getShort(){
+		return getLimetable().getEntry("tshort").getDouble(0);
+	}
+
 	/**
 	 * 
 	 * @param LEDState wanted LED state(0-on, 1-off, 2-blink)

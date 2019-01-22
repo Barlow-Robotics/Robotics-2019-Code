@@ -10,6 +10,7 @@ import frc.robot.subsystems.DriveSubsystem;
  *
  */
 public class DriveCommand extends Command {
+
     public DriveCommand() {
         // Use requires() here to declare subsystem dependencies
         // eg. requires(chassis);
@@ -24,10 +25,15 @@ public class DriveCommand extends Command {
     protected void execute() {
         if(OI.getPlaystation().getRawButton(10)) DriveSubsystem.autoEnable = true;
         if(Math.abs(OI.getPlaystationX()) >= .2 || Math.abs(OI.getPlaystationY()) >= .2 || Math.abs(OI.getPlaystationZ()) >= .2) DriveSubsystem.autoEnable = false;
+       
+       // System.out.println(DriveSubsystem.autoEnable);
+       DriveSubsystem.updateAngle();
+
         if(DriveSubsystem.autoEnable)
         DriveSubsystem.focusTape();
         else
-    	DriveSubsystem.mecanumDrive();
+        DriveSubsystem.mecanumDrive();
+
     }
 
     // Make this return true when this Command no longer needs to run execute()
