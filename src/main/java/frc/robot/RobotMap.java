@@ -22,6 +22,8 @@ public class RobotMap {
 		public static final int BACK_LEFT_MOTOR_PORT = 7;
 		public static final int BACK_RIGHT_MOTOR_PORT = 8;
   }
+	  public static final int openArmSolenoidPort = 0;
+	  public static final int closeArmSolenoidPort = 1;
   	//CONTROLLER
 	public static final class Controllers{
     public static final int PLAYSTATION_PORT = 0;
