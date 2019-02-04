@@ -27,6 +27,8 @@ public class RobotMap {
     public static final int PLAYSTATION_PORT = 0;
   }
       //pneumatic ports
-	  public static int openArmSolenoidPort = 0;
-	  public static int closeArmSolenoidPort = 1;
+	  public static int openClawSolenoidPort = 0;
+	  public static int closeClawSolenoidPort = 1;
+	  public static int openExtendSolenoidPort = 2;
+	  public static int closeExtendSolenoidPort = 3;
 }

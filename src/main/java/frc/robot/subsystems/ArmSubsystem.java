@@ -18,44 +18,82 @@ import edu.wpi.first.wpilibj.Compressor;
 public class ArmSubsystem extends Subsystem {
     
 	public Compressor compressor = new Compressor();
-	public Solenoid openSolenoid = new Solenoid(RobotMap.openArmSolenoidPort);
-	public Solenoid closeSolenoid = new Solenoid(RobotMap.closeArmSolenoidPort);
-	
-	public boolean open = true;
+	public Solenoid openSolenoidClaw = new Solenoid(RobotMap.openClawSolenoidPort);
+	public Solenoid closeSolenoidClaw = new Solenoid(RobotMap.closeClawSolenoidPort);
+  public Solenoid openSolenoidExtend = new Solenoid(RobotMap.openExtendSolenoidPort);
+	public Solenoid closeSolenoidExtend = new Solenoid(RobotMap.closeExtendSolenoidPort);
+  public boolean openClaw = false;
+  public boolean openExtend = false;
 
     public void initDefaultCommand() {
     	setDefaultCommand(new ArmCommand());	
     }
     
-    public boolean getStatus() {
-    	return openSolenoid.get();
+    public boolean getClawStatus() {
+    	return openSolenoidClaw.get();
     }
     /**
      * sets the open variable to true and updates the solenoids
      * */
-    public void open() {
-    	open = true;
-		updateSolenoids();
+    public void openClaw() {
+      openClaw = true;
+		  updateClawSolenoids();
     }
     
-    public void toggle() {
-    	open = !open;
-    	updateSolenoids();
+    public void toggleClaw() {
+    	openClaw = !openClaw;
+    	updateClawSolenoids();
     }
     
     /**
      * sets the open variable to false and updates the solenoids
      * */
-    public void close() {
-    	open = false;
-		updateSolenoids();
+    public void closeClaw() {
+    	openClaw = false;
+		updateClawSolenoids();
     }
     /**
      * sets the solenoids to be opposite states of each other using
      * the "open" variable
      * */
-    private void updateSolenoids() {
-    	openSolenoid.set(open);
-    	closeSolenoid.set(!open);
+    private void updateClawSolenoids() {
+    	openSolenoidClaw.set(openClaw);
+    	closeSolenoidClaw.set(!openClaw);
     }
+
+
+
+
+    public boolean getExtendStatus() {
+    	return openSolenoidExtend.get();
+    }
+    /**
+     * sets the open variable to true and updates the solenoids
+     * */
+    public void openExtend() {
+      openExtend = true;
+		  updateExtendSolenoids();
+    }
+    
+    public void toggleExtend() {
+    	openExtend = !openExtend;
+    	updateExtendSolenoids();
+    }
+    
+    /**
+     * sets the open variable to false and updates the solenoids
+     * */
+    public void closeExtend() {
+    	openExtend = false;
+		  updateExtendSolenoids();
+    }
+    /**
+     * sets the solenoids to be opposite states of each other using
+     * the "open" variable
+     * */
+    private void updateExtendSolenoids() {
+    	openSolenoidExtend.set(openExtend);
+    	closeSolenoidExtend.set(!openExtend);
+    }
+
 }

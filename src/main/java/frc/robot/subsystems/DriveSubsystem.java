@@ -39,7 +39,7 @@ public class DriveSubsystem extends Subsystem {
 	// reduction in motor speed when the battery starts to run down, as well as the
 	// fact that the PID controller may add some gain beyond the set point if the motor needs
 	// to "catch up" to the set value.
-	private final int MAX_ENCODER = 1;  // wpk - place holder value for now
+	private final double MAX_ENCODER = 1.0;  // wpk - place holder value for now
 
 	// This constant represents the reading from the distance sensor that indicates the
 	// bot is close enough to the target and we don't need to move any closer.
@@ -72,7 +72,7 @@ public class DriveSubsystem extends Subsystem {
 	// This is the feed forward term used in the PID controller. For understanding
 	// what this is for,
 	// consult the WPILib docs on feed forward or look at the PIDBase code.
-	private final double KF = 1 / MAX_ENCODER;
+	private final double KF = 1.0 / MAX_ENCODER;
 
 
     ////////////////////
@@ -126,12 +126,24 @@ public class DriveSubsystem extends Subsystem {
 
 	DriveMode driveMode;
 
+	class getData extends Spark{
+        public getData(int channel){
+            super(channel);
+        }
+
+        @Override
+        public void pidWrite(double output) {
+            super.pidWrite(output);
+            System.out.println("PIDWRITE: " + output);
+        }
+	}
+	
 	public DriveSubsystem() {
 
-		frontLeftMotor = new Spark(RobotMap.PWM.FRONT_LEFT_MOTOR_PORT);
-		frontRightMotor = new Spark(RobotMap.PWM.FRONT_RIGHT_MOTOR_PORT);
-		backLeftMotor = new Spark(RobotMap.PWM.BACK_LEFT_MOTOR_PORT);
-		backRightMotor = new Spark(RobotMap.PWM.BACK_RIGHT_MOTOR_PORT);
+		frontLeftMotor = new getData(RobotMap.PWM.FRONT_LEFT_MOTOR_PORT);
+		frontRightMotor = new getData(RobotMap.PWM.FRONT_RIGHT_MOTOR_PORT);
+		backLeftMotor = new getData(RobotMap.PWM.BACK_LEFT_MOTOR_PORT);
+		backRightMotor = new getData(RobotMap.PWM.BACK_RIGHT_MOTOR_PORT);
 
 		frontLeftMotor.setName("frontLeftMotor");
 		frontRightMotor.setName("frontRightMotor");
@@ -141,17 +153,20 @@ public class DriveSubsystem extends Subsystem {
 		frontLeftMotor.setInverted(true);
 		backLeftMotor.setInverted(true);
 
-		frontLeftEncoder = new Encoder(4, 5); // wpk - need to figure out what the right params are
-		frontRightEncoder = new Encoder(2, 3); // wpk - need to figure out what the right params are
-		backLeftEncoder = new Encoder(0, 1); // wpk - need to figure out what the right params are
-		backRightEncoder = new Encoder(6, 7); // wpk - need to figure out what the right params are
+		/**
+		 * TODO add these to robot map
+		 */
+		frontLeftEncoder = new Encoder(4, 5); 
+		frontRightEncoder = new Encoder(2, 3);
+		backLeftEncoder = new Encoder(0, 1); 
+		backRightEncoder = new Encoder(6, 7); 
 		
 		frontLeftSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, frontLeftEncoder, frontLeftMotor);
 		frontRightSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, frontRightEncoder, frontRightMotor);
 		backLeftSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, backLeftEncoder, backLeftMotor);
 		backRightSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, backRightEncoder, backRightMotor);
 
-		robotDrive = new MecanumDrive(frontLeftSpeedCtrl, backLeftSpeedCtrl, frontRightSpeedCtrl, backRightMotor);
+		robotDrive = new MecanumDrive(frontLeftSpeedCtrl, backLeftSpeedCtrl, frontRightSpeedCtrl, backRightSpeedCtrl);
 		robotDrive.setMaxOutput(MAX_ENCODER);
 
 		// limelight = new LimeLight();

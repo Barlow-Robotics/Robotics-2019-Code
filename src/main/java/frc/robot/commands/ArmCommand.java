@@ -13,6 +13,8 @@ import frc.robot.Robot;
 import frc.robot.OI;
 
 public class ArmCommand extends Command {
+  boolean check1 = false;
+  boolean check2 = false;
   public ArmCommand() {
     // Use requires() here to declare subsystem dependencies
     requires(Robot.armSubsystem);
@@ -26,11 +28,25 @@ public class ArmCommand extends Command {
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
+    
     if(OI.getPlaystation().getRawButton(4)){
-      Robot.armSubsystem.open();
-    }else{
-      Robot.armSubsystem.close();
+      if(check1){
+        Robot.armSubsystem.openClaw();
+        check1 = !check1;
+      }else{
+        Robot.armSubsystem.closeClaw();
+        check1 = !check1;
     }
+  }
+  if(OI.getPlaystation().getRawButton(5)){
+    if(check2){
+      Robot.armSubsystem.openExtend();
+      check2 = !check2;
+    }else{
+      Robot.armSubsystem.openExtend();
+      check2 = !check2;
+  }
+}
   }
 
   // Make this return true when this Command no longer needs to run execute()

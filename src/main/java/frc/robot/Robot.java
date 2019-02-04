@@ -32,8 +32,8 @@ public class Robot extends TimedRobot {
 
   private VisionSystem visionSystem ;
 
-  public  static DriveSubsystem driveSubsystem = new DriveSubsystem();
-  public  static ArmSubsystem armSubsystem = new ArmSubsystem();
+  public static DriveSubsystem driveSubsystem = new DriveSubsystem();
+  public static ArmSubsystem armSubsystem = new ArmSubsystem();
   
   public  OI m_oi;
 
