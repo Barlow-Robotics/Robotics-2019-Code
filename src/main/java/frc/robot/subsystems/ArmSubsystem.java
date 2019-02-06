@@ -16,17 +16,17 @@ import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Compressor;
 
 public class ArmSubsystem extends Subsystem {
-    
-	public Compressor compressor = new Compressor();
-	public Solenoid openSolenoidClaw = new Solenoid(RobotMap.openClawSolenoidPort);
-	public Solenoid closeSolenoidClaw = new Solenoid(RobotMap.closeClawSolenoidPort);
-  public Solenoid openSolenoidExtend = new Solenoid(RobotMap.openExtendSolenoidPort);
-	public Solenoid closeSolenoidExtend = new Solenoid(RobotMap.closeExtendSolenoidPort);
-  public boolean openClaw = false;
-  public boolean openExtend = false;
+  public static Compressor compressor = new Compressor(); 
+	public static Solenoid openSolenoidClaw = new Solenoid(RobotMap.openClawSolenoidPort);
+	public static Solenoid closeSolenoidClaw = new Solenoid(RobotMap.closeClawSolenoidPort);
+  public static Solenoid openSolenoidExtend = new Solenoid(RobotMap.openExtendSolenoidPort);
+	public static Solenoid closeSolenoidExtend = new Solenoid(RobotMap.closeExtendSolenoidPort);
+  public static boolean openClaw = false;
+  public static boolean openExtend = false;
 
     public void initDefaultCommand() {
-    	setDefaultCommand(new ArmCommand());	
+      setDefaultCommand(new ArmCommand());	
+      
     }
     
     public boolean getClawStatus() {

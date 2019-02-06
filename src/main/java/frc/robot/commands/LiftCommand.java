@@ -8,18 +8,16 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.command.Command;
-import edu.wpi.first.wpilibj.*;
-import frc.robot.Robot;
 import frc.robot.OI;
+import frc.robot.Robot;
+import frc.robot.RobotMap;
 
-public class ArmCommand extends Command {
-  public static boolean check1 = false;
-  public static boolean check2 = false;
-  public static Spark lift = new Spark(9);
+public class LiftCommand extends Command {
 
-  public ArmCommand() {
+
+  public LiftCommand() {
     // Use requires() here to declare subsystem dependencies
-    requires(Robot.armSubsystem);
+    requires(Robot.liftSubsystem);
   }
 
   // Called just before this Command runs the first time
@@ -30,18 +28,8 @@ public class ArmCommand extends Command {
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
-    lift.set(0);
+    Robot.liftSubsystem.liftIt();
     
-    if(OI.getPlaystation().getRawButton(4)){
-        Robot.armSubsystem.openClaw();
-    }else{
-        Robot.armSubsystem.closeClaw();
-    }
-    if(OI.getPlaystation().getRawButton(5)){
-      Robot.armSubsystem.openExtend();
-  }else{
-      Robot.armSubsystem.closeExtend();
-  }
   }
 
   // Make this return true when this Command no longer needs to run execute()

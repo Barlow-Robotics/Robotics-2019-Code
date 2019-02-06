@@ -5,11 +5,16 @@ import frc.robot.RobotMap;
 import frc.robot.Customlib.*;
 import frc.robot.commands.DriveCommand;
 import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Spark;
@@ -39,7 +44,7 @@ public class DriveSubsystem extends Subsystem {
 	// reduction in motor speed when the battery starts to run down, as well as the
 	// fact that the PID controller may add some gain beyond the set point if the motor needs
 	// to "catch up" to the set value.
-	private final double MAX_ENCODER = 1.0;  // wpk - place holder value for now
+	private final double MAX_ENCODER = 10000.0;
 
 	// This constant represents the reading from the distance sensor that indicates the
 	// bot is close enough to the target and we don't need to move any closer.
@@ -65,9 +70,9 @@ public class DriveSubsystem extends Subsystem {
 
 	// These are the proportional, integral, and derivative coefficients used in the
 	// PID control.
-	private final double KP = 0; // update when PID is tuned
-	private final double KI = 0; // update when PID is tuned
-	private final double KD = 0; // update when PID is tuned
+	private final double KP = 0.0000008; // update when PID is tuned
+	private final double KI = 0.00001; // update when PID is tuned
+	private final double KD = 0.00005; // update when PID is tuned
 
 	// This is the feed forward term used in the PID controller. For understanding
 	// what this is for,
@@ -100,7 +105,7 @@ public class DriveSubsystem extends Subsystem {
 
 	// Mecanum Drive Variable... Used to move the robot
 	private MecanumDrive robotDrive ;
-
+	ServerSocket outputSocket;
 	// 
 	private VisionSystem visionSystem ;
 	
@@ -125,42 +130,47 @@ public class DriveSubsystem extends Subsystem {
 	};
 
 	DriveMode driveMode;
+	class MotorIntercept extends Spark{
+		
+		public MotorIntercept(int port){
+			super(port);
+		}
 
-	class getData extends Spark{
-        public getData(int channel){
-            super(channel);
-        }
-
-        @Override
-        public void pidWrite(double output) {
-            super.pidWrite(output);
-            System.out.println("PIDWRITE: " + output);
-        }
+		@Override
+		public void setSpeed(double speed){
+			super.setSpeed(OI.getThreshedPSX() != 0 ||
+				 OI.getThreshedPSY() != 0 || OI.getThreshedPSZ() != 0
+				 ? speed : 0);
+			// super.setSpeed(speed);
+		}
+		private double threshHold(double in, double thresh){
+			return Math.abs(in) > thresh ? in : 0;
+		}
 	}
 	
 	public DriveSubsystem() {
 
-		frontLeftMotor = new getData(RobotMap.PWM.FRONT_LEFT_MOTOR_PORT);
-		frontRightMotor = new getData(RobotMap.PWM.FRONT_RIGHT_MOTOR_PORT);
-		backLeftMotor = new getData(RobotMap.PWM.BACK_LEFT_MOTOR_PORT);
-		backRightMotor = new getData(RobotMap.PWM.BACK_RIGHT_MOTOR_PORT);
+		frontLeftMotor = new MotorIntercept(RobotMap.PWM.FRONT_LEFT_MOTOR_PORT);
+		frontRightMotor = new MotorIntercept(RobotMap.PWM.FRONT_RIGHT_MOTOR_PORT);
+		backLeftMotor = new MotorIntercept(RobotMap.PWM.BACK_LEFT_MOTOR_PORT);
+		backRightMotor = new MotorIntercept(RobotMap.PWM.BACK_RIGHT_MOTOR_PORT);
 
 		frontLeftMotor.setName("frontLeftMotor");
 		frontRightMotor.setName("frontRightMotor");
 		backLeftMotor.setName("backLeftMotor");
 		backRightMotor.setName("backRightMotor");
 
-		frontLeftMotor.setInverted(true);
-		backLeftMotor.setInverted(true);
 
 		/**
 		 * TODO add these to robot map
 		 */
-		frontLeftEncoder = new Encoder(4, 5); 
-		frontRightEncoder = new Encoder(2, 3);
-		backLeftEncoder = new Encoder(0, 1); 
-		backRightEncoder = new Encoder(6, 7); 
-		
+		frontLeftEncoder = new Encoder(RobotMap.DIO.frontLeftEncoderPorts[0], RobotMap.DIO.frontLeftEncoderPorts[1]); 
+		frontRightEncoder = new Encoder(RobotMap.DIO.frontRightEncoderPorts[0], RobotMap.DIO.frontRightEncoderPorts[1]);
+		backLeftEncoder = new Encoder(RobotMap.DIO.backLeftEncoderPorts[0], RobotMap.DIO.backLeftEncoderPorts[1]); 
+		backRightEncoder = new Encoder(RobotMap.DIO.backRightEncoderPorts[0], RobotMap.DIO.backRightEncoderPorts[1]); 
+		// frontRightEncoder.setReverseDirection(true);
+		// backRightEncoder.setReverseDirection(true);
+
 		frontLeftSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, frontLeftEncoder, frontLeftMotor);
 		frontRightSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, frontRightEncoder, frontRightMotor);
 		backLeftSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, backLeftEncoder, backLeftMotor);
@@ -272,13 +282,12 @@ public class DriveSubsystem extends Subsystem {
 
 	}
 
-
 	// Need to understand where this can be called from. Maybe command?
 	public void doDriving() {
-		SmartDashboard.putNumber("frontLeftEncoder", frontLeftEncoder.getRate());
-		SmartDashboard.putNumber("frontRightEncoder", frontRightEncoder.getRate());
-		SmartDashboard.putNumber("backRightEncoder", backRightEncoder.getRate());
-		SmartDashboard.putNumber("backLeftEncoder", backLeftEncoder.getRate());
+		SmartDashboard.putString("frontLeftEncoder", frontLeftEncoder.getRate()+"");
+		SmartDashboard.putString("frontRightEncoder", frontRightEncoder.getRate()+"");
+		SmartDashboard.putString("backRightEncoder", backRightEncoder.getRate()+"");
+		SmartDashboard.putString("backLeftEncoder", backLeftEncoder.getRate()+"");
 
 		if(driveMode == null) driveMode = DriveMode.Manual;
         switch ( driveMode ) {
@@ -290,7 +299,7 @@ public class DriveSubsystem extends Subsystem {
 				   // joystick inputs?
 				// wpk this line commented out to allow compile. 
 				// robotDrive.drive(OI.getPlaystation());
-				robotDrive.driveCartesian( 0, OI.getPlaystationY(), 0);
+				robotDrive.driveCartesian( OI.getThreshedPSX() , OI.getThreshedPSY(), OI.getThreshedPSZ());
 			    break ;
 
 			case Positioning :
@@ -368,6 +377,9 @@ public class DriveSubsystem extends Subsystem {
 
 		}
 
+	}
+	public double threshHold(double in, double thresh){
+		return Math.abs(in) > thresh ? in : 0;
 	}
 
 	// public static Spark getFrontLeftMotor() {

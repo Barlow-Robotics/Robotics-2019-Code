@@ -15,17 +15,28 @@ package frc.robot;
  */
 public class RobotMap {
 
-  public static final class PWM{
+  	public static final class PWM{
 		//Drive
 		public static final int FRONT_LEFT_MOTOR_PORT = 4;
 		public static final int FRONT_RIGHT_MOTOR_PORT = 5;
 		public static final int BACK_LEFT_MOTOR_PORT = 7;
 		public static final int BACK_RIGHT_MOTOR_PORT = 8;
-  }
+		public static final int LIFT_MOTOR = 1;
+  	}
+  	public static final class DIO{
+		public static final int[] frontLeftEncoderPorts = {0, 1};
+		public static final int[] frontRightEncoderPorts = {2, 3};
+		public static final int[] backLeftEncoderPorts = {4, 5};
+		public static final int[] backRightEncoderPorts = {6, 7};
+
+		public static final int HES_M = 6;
+		public static final int HES_T = 7;
+	}
   	//CONTROLLER
 	public static final class Controllers{
-    public static final int PLAYSTATION_PORT = 0;
-  }
+		public static final int PLAYSTATION_PORT = 0;
+		public static final int BOX_PORT = 1;
+  	}
       //pneumatic ports
 	  public static int openClawSolenoidPort = 0;
 	  public static int closeClawSolenoidPort = 1;

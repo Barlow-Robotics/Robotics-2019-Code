@@ -13,9 +13,12 @@ import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.commands.ArmCommand;
 import frc.robot.commands.DriveCommand;
+import frc.robot.commands.LiftCommand;
 import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.LiftSubsystem;
 import frc.robot.Customlib.*;
 
 
@@ -34,7 +37,8 @@ public class Robot extends TimedRobot {
 
   public static DriveSubsystem driveSubsystem = new DriveSubsystem();
   public static ArmSubsystem armSubsystem = new ArmSubsystem();
-  
+  public static LiftSubsystem liftSubsystem = new LiftSubsystem();
+  public static ServerOut serverOut = new ServerOut(4572);
   public  OI m_oi;
 
   Command m_autonomousCommand;
@@ -49,9 +53,11 @@ public class Robot extends TimedRobot {
     // DriveSubsystem.getFrontLeftMotor().setInverted(true);
     // DriveSubsystem.getBackLeftMotor().setInverted(true);
     CameraServer.getInstance().addAxisCamera("LimeLight", "10.45.72.59:5800");
-    
+    ArmSubsystem.compressor.start();
     m_oi = new OI();
     m_chooser.setDefaultOption("Default Auto", new DriveCommand());
+    m_chooser.setDefaultOption("Default Auto", new LiftCommand());
+    m_chooser.setDefaultOption("Default Auto", new ArmCommand());
     // chooser.addOption("My Auto", new MyAutoCommand());
     SmartDashboard.putData("Auto mode", m_chooser);
   }
