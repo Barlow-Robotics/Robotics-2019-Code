@@ -6,7 +6,7 @@
 /*----------------------------------------------------------------------------*/
 
 package frc.robot;
-
+import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.command.Command;
@@ -34,11 +34,11 @@ public class Robot extends TimedRobot {
   // wpk this class will have to be updated to create the vision system and provide it to the drive subsystem
 
   private VisionSystem visionSystem ;
-
+  Preferences dashboard;
   public static DriveSubsystem driveSubsystem = new DriveSubsystem();
   public static ArmSubsystem armSubsystem = new ArmSubsystem();
   public static LiftSubsystem liftSubsystem = new LiftSubsystem();
-  public static ServerOut serverOut = new ServerOut(4572);
+
   public  OI m_oi;
 
   Command m_autonomousCommand;
@@ -52,6 +52,10 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     // DriveSubsystem.getFrontLeftMotor().setInverted(true);
     // DriveSubsystem.getBackLeftMotor().setInverted(true);
+    dashboard.getDouble("Robot.driveSubsystem.KP", 0.0);
+    dashboard.getDouble("Robot.driveSubsystem.KI", 0.0);
+    dashboard.getDouble("Robot.driveSubsystem.KD", 0.0);
+
     CameraServer.getInstance().addAxisCamera("LimeLight", "10.45.72.59:5800");
     ArmSubsystem.compressor.start();
     m_oi = new OI();

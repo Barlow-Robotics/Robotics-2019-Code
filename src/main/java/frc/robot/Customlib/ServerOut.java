@@ -3,6 +3,7 @@ package frc.robot.Customlib;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.util.ArrayList;
 
 public class ServerOut{
@@ -10,6 +11,9 @@ public class ServerOut{
     private DatagramSocket socket;
 
     public ServerOut(int port){
+        try{
+            socket = new DatagramSocket(port);
+        }catch(Exception e){System.err.println(e);}
         this.port = port;
     }
 

@@ -4,29 +4,15 @@ import frc.robot.OI;
 import frc.robot.RobotMap;
 import frc.robot.Customlib.*;
 import frc.robot.commands.DriveCommand;
-import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
-import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import com.kauailabs.navx.frc.AHRS;
 import org.opencv.core.*;
-import org.opencv.core.Core.*;
-import org.opencv.features2d.FeatureDetector;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.*;
-import org.opencv.objdetect.*;
-import org.opencv.core.Mat;
 
 /**
  *
@@ -70,9 +56,9 @@ public class DriveSubsystem extends Subsystem {
 
 	// These are the proportional, integral, and derivative coefficients used in the
 	// PID control.
-	private final double KP = 0.0000008; // update when PID is tuned
-	private final double KI = 0.00001; // update when PID is tuned
-	private final double KD = 0.00005; // update when PID is tuned
+	public double KP = 0.0000008; // update when PID is tuned
+	public double KI = 0.00001; // update when PID is tuned
+	public double KD = 0.00005; // update when PID is tuned
 
 	// This is the feed forward term used in the PID controller. For understanding
 	// what this is for,
@@ -130,8 +116,8 @@ public class DriveSubsystem extends Subsystem {
 	};
 
 	DriveMode driveMode;
-	class MotorIntercept extends Spark{
-		
+	public class MotorIntercept extends Spark{
+		public double lastSetSpeed = 0;
 		public MotorIntercept(int port){
 			super(port);
 		}
@@ -141,7 +127,6 @@ public class DriveSubsystem extends Subsystem {
 			super.setSpeed(OI.getThreshedPSX() != 0 ||
 				 OI.getThreshedPSY() != 0 || OI.getThreshedPSZ() != 0
 				 ? speed : 0);
-			// super.setSpeed(speed);
 		}
 		private double threshHold(double in, double thresh){
 			return Math.abs(in) > thresh ? in : 0;
@@ -171,10 +156,10 @@ public class DriveSubsystem extends Subsystem {
 		// frontRightEncoder.setReverseDirection(true);
 		// backRightEncoder.setReverseDirection(true);
 
-		frontLeftSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, frontLeftEncoder, frontLeftMotor);
-		frontRightSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, frontRightEncoder, frontRightMotor);
-		backLeftSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, backLeftEncoder, backLeftMotor);
-		backRightSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, backRightEncoder, backRightMotor);
+		frontLeftSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, frontLeftEncoder, frontLeftMotor, 14572);
+		frontRightSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, frontRightEncoder, frontRightMotor,14573);
+		backLeftSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, backLeftEncoder, backLeftMotor,14574);
+		backRightSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, backRightEncoder, backRightMotor,14575);
 
 		robotDrive = new MecanumDrive(frontLeftSpeedCtrl, backLeftSpeedCtrl, frontRightSpeedCtrl, backRightSpeedCtrl);
 		robotDrive.setMaxOutput(MAX_ENCODER);

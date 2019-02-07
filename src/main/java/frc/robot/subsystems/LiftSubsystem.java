@@ -21,6 +21,8 @@ public class LiftSubsystem extends Subsystem {
   // here. Call these from Commands.
   public static int posistion = 0;
   public static boolean movinUp = false;
+  
+  
   enum Position{
     bottom(-1), middle(0), top(1), none(0);
     private int val;
@@ -36,9 +38,11 @@ public class LiftSubsystem extends Subsystem {
     }
 
   }
-  public static Spark LiftMotor = new Spark(RobotMap.PWM.LIFT_MOTOR);
-  public static Position Lastposition = Position.bottom;
-  public static Position goTo = Position.none;
+  public Spark LiftMotor = new Spark(RobotMap.PWM.LIFT_MOTOR);
+  public DigitalInput HES_L = new DigitalInput(RobotMap.DIO.HES_L);
+  public DigitalInput HES_R = new DigitalInput(RobotMap.DIO.HES_R);
+  public Position Lastposition = Position.bottom;
+  public Position goTo = Position.none;
 
   //public static DigitalInput HES_L = new DigitalInput(RobotMap.DIO.HES_M);
   //public static DigitalInput HES_R = new DigitalInput(RobotMap.DIO.HES_T);
@@ -49,19 +53,13 @@ public class LiftSubsystem extends Subsystem {
     // setDefaultCommand(new MySpecialCommand());
   }
 
-  public static void setPosition(Position where){
+  public void setPosition(Position where){
       goTo = where;
   }
 
   private final int DELAY = 2;
   private int currentCnt = DELAY;
   public void liftIt(){
-    // if(!HES_L.get() || !HES_R.get()){
-    //   currentCnt--;
-    // }else{
-    //   currentCnt = DELAY;
-    // }
-
     if(currentCnt == 0){
       checkPositions();
       currentCnt = DELAY;
@@ -91,8 +89,8 @@ public class LiftSubsystem extends Subsystem {
      * Set the last position to the last sensor to detect the lift 
      */
   public void checkPositions(){
-    // if(!HES_L.get() && HES_R.get()) Lastposition = Position.bottom;
-    // if(!HES_L.get() && !HES_R.get()) Lastposition = Lastposition.getValue() == 1 ? Position.bottom : Position.top;
-    // if(HES_L.get() && !HES_R.get()) Lastposition = Position.top;
+    if(!HES_L.get() && HES_R.get()) Lastposition = Position.bottom;
+    if(!HES_L.get() && !HES_R.get()) Lastposition = goTo.val == 1 ? Position.bottom : Position.top;
+    if(HES_L.get() && !HES_R.get()) Lastposition = Position.top;
   }
 }

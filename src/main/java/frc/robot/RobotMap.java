@@ -18,10 +18,10 @@ public class RobotMap {
   	public static final class PWM{
 		//Drive
 		public static final int FRONT_LEFT_MOTOR_PORT = 4;
-		public static final int FRONT_RIGHT_MOTOR_PORT = 5;
+		public static final int FRONT_RIGHT_MOTOR_PORT = 1;
 		public static final int BACK_LEFT_MOTOR_PORT = 7;
 		public static final int BACK_RIGHT_MOTOR_PORT = 8;
-		public static final int LIFT_MOTOR = 1;
+		public static final int LIFT_MOTOR = 5;
   	}
   	public static final class DIO{
 		public static final int[] frontLeftEncoderPorts = {0, 1};
@@ -29,8 +29,8 @@ public class RobotMap {
 		public static final int[] backLeftEncoderPorts = {4, 5};
 		public static final int[] backRightEncoderPorts = {6, 7};
 
-		public static final int HES_M = 6;
-		public static final int HES_T = 7;
+		public static final int HES_L = 8;
+		public static final int HES_R = 9;
 	}
   	//CONTROLLER
 	public static final class Controllers{

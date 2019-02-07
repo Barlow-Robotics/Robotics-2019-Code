@@ -2,6 +2,7 @@ package frc.robot.Customlib;
 
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.subsystems.DriveSubsystem.MotorIntercept;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDOutput;
 import edu.wpi.first.wpilibj.PIDSource;
@@ -16,10 +17,11 @@ public class PIDSpeedCtrl implements SpeedController{
     public SpeedController motorController;
     public PIDController pidCtrl ;
     public PIDSource pidSrc;
-
+    ServerOut output;
     // This should probably be updated to accept P, I, D, and F parameters for 
     // the PID
-    public PIDSpeedCtrl(double Kp, double Ki, double Kd, double Kf, PIDSource pidSrc, SpeedController motorController ){
+    public PIDSpeedCtrl(double Kp, double Ki, double Kd, double Kf, PIDSource pidSrc, SpeedController motorController, int port){
+        output = new ServerOut(port);
         this.motorController = motorController;
         this.pidSrc = pidSrc;
         pidSrc.setPIDSourceType(PIDSourceType.kRate);
@@ -29,6 +31,7 @@ public class PIDSpeedCtrl implements SpeedController{
 
     @Override
     public void set(double speed){
+        output.sendData(System.currentTimeMillis() + "," + ((PWM)motorController).getName() + "," + speed + "," + ((MotorIntercept)motorController).lastSetSpeed);
         System.out.println(((PWM)motorController).getName() + ": " + pidCtrl.getError());
         pidCtrl.setSetpoint(speed);
     }
