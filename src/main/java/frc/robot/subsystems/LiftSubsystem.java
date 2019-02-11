@@ -10,6 +10,7 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import frc.robot.OI;
 import frc.robot.RobotMap;
+import frc.robot.commands.LiftCommand;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Spark;
 
@@ -38,7 +39,7 @@ public class LiftSubsystem extends Subsystem {
     }
 
   }
-  public Spark LiftMotor = new Spark(RobotMap.PWM.LIFT_MOTOR);
+  public Spark liftMotor = new Spark(RobotMap.PWM.LIFT_MOTOR_PORT);
   public DigitalInput HES_L = new DigitalInput(RobotMap.DIO.HES_L);
   public DigitalInput HES_R = new DigitalInput(RobotMap.DIO.HES_R);
   public Position Lastposition = Position.bottom;
@@ -50,7 +51,7 @@ public class LiftSubsystem extends Subsystem {
   @Override
   public void initDefaultCommand() {
     // Set the default command for a subsystem here.
-    // setDefaultCommand(new MySpecialCommand());
+    setDefaultCommand(new LiftCommand());
   }
 
   public void setPosition(Position where){
@@ -74,9 +75,9 @@ public class LiftSubsystem extends Subsystem {
 
     if(Lastposition == goTo) goTo = Position.none; //Go nowhere if you reach the destination 
     if(goTo == Position.middle){
-      LiftMotor.set(-Lastposition.getValue() * directionModifier(-Lastposition.getValue())); //If middle set, move away from the top or bottom (Depends on last position)
+      liftMotor.set(-Lastposition.getValue() * directionModifier(-Lastposition.getValue())); //If middle set, move away from the top or bottom (Depends on last position)
     }else{
-      LiftMotor.set(goTo.getValue() * directionModifier(goTo.getValue())); //Go to 
+      liftMotor.set(goTo.getValue() * directionModifier(goTo.getValue())); //Go to 
     }
 
   }

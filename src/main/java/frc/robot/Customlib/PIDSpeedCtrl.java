@@ -2,7 +2,6 @@ package frc.robot.Customlib;
 
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.subsystems.DriveSubsystem.MotorIntercept;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDOutput;
 import edu.wpi.first.wpilibj.PIDSource;
@@ -31,8 +30,7 @@ public class PIDSpeedCtrl implements SpeedController{
 
     @Override
     public void set(double speed){
-        output.sendData(System.currentTimeMillis() + "," + ((PWM)motorController).getName() + "," + speed + "," + ((MotorIntercept)motorController).lastSetSpeed);
-        System.out.println(((PWM)motorController).getName() + ": " + pidCtrl.getError());
+        output.sendData(System.currentTimeMillis() + "," + speed + "," + pidSrc.pidGet());
         pidCtrl.setSetpoint(speed);
     }
 

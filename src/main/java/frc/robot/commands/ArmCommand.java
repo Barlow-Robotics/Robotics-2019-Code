@@ -15,7 +15,6 @@ import frc.robot.OI;
 public class ArmCommand extends Command {
   public static boolean check1 = false;
   public static boolean check2 = false;
-  public static Spark lift = new Spark(9);
 
   public ArmCommand() {
     // Use requires() here to declare subsystem dependencies
@@ -30,7 +29,6 @@ public class ArmCommand extends Command {
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
-    lift.set(0);
     
     if(OI.getPlaystation().getRawButton(4)){
         Robot.armSubsystem.openClaw();

@@ -56,9 +56,9 @@ public class DriveSubsystem extends Subsystem {
 
 	// These are the proportional, integral, and derivative coefficients used in the
 	// PID control.
-	public double KP = 0.0000008; // update when PID is tuned
-	public double KI = 0.00001; // update when PID is tuned
-	public double KD = 0.00005; // update when PID is tuned
+	public double KP = 0.00002; // update when PID is tuned
+	public double KI = 0.0; // update when PID is tuned
+	public double KD = 0.000000005; // update when PID is tuned
 
 	// This is the feed forward term used in the PID controller. For understanding
 	// what this is for,
@@ -116,29 +116,29 @@ public class DriveSubsystem extends Subsystem {
 	};
 
 	DriveMode driveMode;
-	public class MotorIntercept extends Spark{
-		public double lastSetSpeed = 0;
-		public MotorIntercept(int port){
-			super(port);
-		}
+	// public class MotorIntercept extends Spark{
+	// 	public double lastSetSpeed = 0;
+	// 	public MotorIntercept(int port){
+	// 		super(port);
+	// 	}
 
-		@Override
-		public void setSpeed(double speed){
-			super.setSpeed(OI.getThreshedPSX() != 0 ||
-				 OI.getThreshedPSY() != 0 || OI.getThreshedPSZ() != 0
-				 ? speed : 0);
-		}
-		private double threshHold(double in, double thresh){
-			return Math.abs(in) > thresh ? in : 0;
-		}
-	}
+	// 	@Override
+	// 	public void setSpeed(double speed){
+	// 		super.setSpeed(OI.getThreshedPSX() != 0 ||
+	// 			 OI.getThreshedPSY() != 0 || OI.getThreshedPSZ() != 0
+	// 			 ? speed : 0);
+	// 	}
+	// 	private double threshHold(double in, double thresh){
+	// 		return Math.abs(in) > thresh ? in : 0;
+	// 	}
+	// }
 	
 	public DriveSubsystem() {
 
-		frontLeftMotor = new MotorIntercept(RobotMap.PWM.FRONT_LEFT_MOTOR_PORT);
-		frontRightMotor = new MotorIntercept(RobotMap.PWM.FRONT_RIGHT_MOTOR_PORT);
-		backLeftMotor = new MotorIntercept(RobotMap.PWM.BACK_LEFT_MOTOR_PORT);
-		backRightMotor = new MotorIntercept(RobotMap.PWM.BACK_RIGHT_MOTOR_PORT);
+		frontLeftMotor = new Spark(RobotMap.PWM.FRONT_LEFT_MOTOR_PORT);
+		frontRightMotor = new Spark(RobotMap.PWM.FRONT_RIGHT_MOTOR_PORT);
+		backLeftMotor = new Spark(RobotMap.PWM.BACK_LEFT_MOTOR_PORT);
+		backRightMotor = new Spark(RobotMap.PWM.BACK_RIGHT_MOTOR_PORT);
 
 		frontLeftMotor.setName("frontLeftMotor");
 		frontRightMotor.setName("frontRightMotor");
@@ -146,9 +146,6 @@ public class DriveSubsystem extends Subsystem {
 		backRightMotor.setName("backRightMotor");
 
 
-		/**
-		 * TODO add these to robot map
-		 */
 		frontLeftEncoder = new Encoder(RobotMap.DIO.frontLeftEncoderPorts[0], RobotMap.DIO.frontLeftEncoderPorts[1]); 
 		frontRightEncoder = new Encoder(RobotMap.DIO.frontRightEncoderPorts[0], RobotMap.DIO.frontRightEncoderPorts[1]);
 		backLeftEncoder = new Encoder(RobotMap.DIO.backLeftEncoderPorts[0], RobotMap.DIO.backLeftEncoderPorts[1]); 
@@ -273,6 +270,9 @@ public class DriveSubsystem extends Subsystem {
 		SmartDashboard.putString("frontRightEncoder", frontRightEncoder.getRate()+"");
 		SmartDashboard.putString("backRightEncoder", backRightEncoder.getRate()+"");
 		SmartDashboard.putString("backLeftEncoder", backLeftEncoder.getRate()+"");
+		SmartDashboard.putNumber("KP", KP);
+		SmartDashboard.putNumber("KI", KI);
+		SmartDashboard.putNumber("KD", KD);
 
 		if(driveMode == null) driveMode = DriveMode.Manual;
         switch ( driveMode ) {
@@ -284,7 +284,7 @@ public class DriveSubsystem extends Subsystem {
 				   // joystick inputs?
 				// wpk this line commented out to allow compile. 
 				// robotDrive.drive(OI.getPlaystation());
-				robotDrive.driveCartesian( OI.getThreshedPSX() , OI.getThreshedPSY(), OI.getThreshedPSZ());
+				robotDrive.driveCartesian( OI.getThreshedPSX() , -OI.getThreshedPSY(), OI.getThreshedPSZ());
 			    break ;
 
 			case Positioning :

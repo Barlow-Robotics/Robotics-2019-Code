@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.command.Command;
 import frc.robot.OI;
 import frc.robot.Robot;
 import frc.robot.RobotMap;
+import frc.robot.subsystems.LiftSubsystem;
 
 public class LiftCommand extends Command {
 
@@ -28,8 +29,6 @@ public class LiftCommand extends Command {
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
-    Robot.liftSubsystem.liftIt();
-    
   }
 
   // Make this return true when this Command no longer needs to run execute()
