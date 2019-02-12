@@ -2,19 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="46499981-8122-4b95-a8d0-1b95c22812ff" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/gson_2_8_5_sources.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules/Robotics-2019-Code.main.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules/Robotics-2019-Code.main.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules/Robotics-2019-Code.test.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules/Robotics-2019-Code.test.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Robotics-2019-Code.iml" beforeDir="false" afterPath="$PROJECT_DIR$/Robotics-2019-Code.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/frc/robot/Customlib/Lidar.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/robot/Customlib/Lidar.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/frc/robot/Customlib/ServerIn.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/robot/Customlib/ServerIn.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/frc/robot/Customlib/VisionSystem.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/robot/Customlib/VisionSystem.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/frc/robot/subsystems/DriveSubsystem.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/robot/subsystems/DriveSubsystem.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.gradle/" />
     <ignored path="$PROJECT_DIR$/build/" />
@@ -56,11 +44,23 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="DriveSubsystem.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="DriveSubsystem.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/frc/robot/subsystems/DriveSubsystem.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="323">
               <caret line="292" column="55" lean-forward="true" selection-start-line="292" selection-start-column="55" selection-end-line="292" selection-end-column="55" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ServerIn.java" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/main/java/frc/robot/Customlib/ServerIn.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="622">
+              <caret line="46" column="36" lean-forward="true" selection-start-line="46" selection-start-column="36" selection-end-line="46" selection-end-column="36" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -114,10 +114,10 @@
       <list>
         <option value="$PROJECT_DIR$/src/main/java/frc/robot/Customlib/LimeLight.java" />
         <option value="$PROJECT_DIR$/build.gradle" />
-        <option value="$PROJECT_DIR$/src/main/java/frc/robot/Customlib/ServerIn.java" />
         <option value="$PROJECT_DIR$/src/main/java/frc/robot/Customlib/VisionSystem.java" />
         <option value="$PROJECT_DIR$/src/main/java/frc/robot/Customlib/Lidar.java" />
         <option value="$PROJECT_DIR$/src/main/java/frc/robot/subsystems/DriveSubsystem.java" />
+        <option value="$PROJECT_DIR$/src/main/java/frc/robot/Customlib/ServerIn.java" />
       </list>
     </option>
   </component>
@@ -285,12 +285,12 @@
       <option name="presentableId" value="Default" />
       <updated>1549934437004</updated>
       <workItem from="1549934439373" duration="4216000" />
-      <workItem from="1549980699142" duration="10210000" />
+      <workItem from="1549980699142" duration="10493000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="14426000" />
+    <option name="totallyTimeSpent" value="14709000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="2575" height="1415" extended-state="6" />
@@ -307,11 +307,11 @@
       <window_info anchor="bottom" id="Database Changes" order="7" weight="0.32994527" />
       <window_info anchor="bottom" id="Run" order="2" />
       <window_info anchor="bottom" id="Version Control" order="7" />
-      <window_info anchor="bottom" id="Terminal" order="7" weight="0.32994527" />
+      <window_info anchor="bottom" id="Terminal" order="7" visible="true" weight="0.32994527" />
       <window_info id="Capture Tool" order="2" />
       <window_info id="Designer" order="2" />
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25168985" />
-      <window_info anchor="bottom" id="Build" order="7" visible="true" weight="0.32838154" />
+      <window_info anchor="bottom" id="Build" order="7" weight="0.32838154" />
       <window_info anchor="right" id="Database" order="3" />
       <window_info anchor="right" id="Gradle" order="3" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -379,10 +379,6 @@
           <caret line="30" column="23" lean-forward="true" selection-start-line="30" selection-start-column="23" selection-end-line="30" selection-end-column="23" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#1056#1057#0" expanded="true" />
-            <element signature="e#1085#1086#0" expanded="true" />
-            <element signature="e#1375#1376#0" expanded="true" />
-            <element signature="e#1445#1446#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -425,20 +421,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/frc/robot/Customlib/ServerIn.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="340">
-          <caret line="20" column="33" selection-start-line="20" selection-start-column="33" selection-end-line="20" selection-end-column="33" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#1056#1057#0" expanded="true" />
-            <element signature="e#1085#1086#0" expanded="true" />
-            <element signature="e#1375#1376#0" expanded="true" />
-            <element signature="e#1445#1446#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/frc/robot/Customlib/VisionSystem.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="306">
@@ -469,6 +451,16 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="323">
           <caret line="292" column="55" lean-forward="true" selection-start-line="292" selection-start-column="55" selection-end-line="292" selection-end-column="55" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/frc/robot/Customlib/ServerIn.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="622">
+          <caret line="46" column="36" lean-forward="true" selection-start-line="46" selection-start-column="36" selection-end-line="46" selection-end-column="36" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

@@ -14,7 +14,6 @@ public class ServerIn{
     private Gson gson = new Gson();
     private AlignmentPacket lastPkt;
 
-    class RotatedRectArray{ public RotatedRect[] lines;}
     class AlignmentPacket{
         public RotatedRect[] Alignmentlines;
         public RotatedRect[] wallRects;
@@ -50,6 +49,6 @@ public class ServerIn{
         lastPkt = string2Packet(data);
     }
     public AlignmentPacket string2Packet(String pkt){
-        return gson.fromJson(pkt,RotatedRectArray.class);
+        return gson.fromJson(pkt,AlignmentPacket.class);
     }
 }
