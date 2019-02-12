@@ -36,6 +36,22 @@ public class LimeLight  {
 		}
 
 	}
+	class Vector3f{
+		double x,y,z;
+		public Vector3f(double x, double y, double z){
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
+	}
+	class Target3D{
+
+		public Vector3f translation, rotation;
+		public Target3D(Vector3f translation, Vector3f rotation){
+			this.translation = translation;
+			this.rotation = rotation;
+		}
+	}
 	
 	/**
 	 * Get the network table for the limelight
@@ -137,6 +153,12 @@ public class LimeLight  {
 	public double getCamMode() {
 		camMode = getLimetable().getEntry("camMode").getDouble(0);
 		return camMode;
+	}
+
+	public Target3D getCamTranslation() {
+		double[] def = {-1,-1,-1,-1,-1,-1};
+		double[] data = getLimetable().getEntry("camtran").getDoubleArray(def);
+		return new Target3D(new Vector3f(data[0],data[1],data[2]),new Vector3f(data[3],data[4],data[5]));
 	}
 	
 	/**

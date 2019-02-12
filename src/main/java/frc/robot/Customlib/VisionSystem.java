@@ -1,5 +1,6 @@
 package frc.robot.Customlib;
 
+import edu.wpi.first.wpilibj.I2C;
 import org.opencv.core.RotatedRect;
 
 public class VisionSystem {
@@ -13,39 +14,76 @@ public class VisionSystem {
 
     private String  targetNetTableName ;
     private String alignmentNetTableName ;
-    private Arduino lidar ;
+    private Lidar lidar;
+	private LimeLight limeLight;
 
-
-    public void VisionSystem(String c, String alignmentNetTableName,  Arduino lidar ) {
+    public void VisionSystem(String c, String alignmentNetTableName) {
         this.alignmentNetTableName = alignmentNetTableName ;
-        this.lidar = lidar ;
+        this.lidar = new Lidar(I2C.Port.kOnboard);
+        this.limeLight = new LimeLight();
+
     }
 
 
     public boolean targetIsPresent() {
-
-        // This function needs to look through the contours returned by the limelight
-        // for a pair that tilt toward each other. True if a pair found, false otherwise.
-
-        // Need to consider what to do if more than one pair of lines is found. Do we pick the
-        // nearest one? Do we need something to let the operator pick which one?
-
-        return false ;
+        return limeLight.hasTarget;
     }
 
+	// The tolerence of bearing to target at which we consider it safe to look at
+	// the lidar value.
+	// This is to make sure the lidar is pointing at the target and not off into
+	// space somewhere.
+	static final double LIDAR_BEARING_TOLERANCE = 4.0; // degrees
 
-    public double distanceToTarget() {
-		// wpk - need to add code here to read and return the distance to the target as read from the lidar
+	// This is the distance estimate at which it is safe to look at the lidar value.
+	// If
+	// the bot is too far out, the lidar may not be pointing at the target
+	// consistently.
+	static final double LIDAR_DISTANCE_THRESHOLD = 36.0; // inches
 
-		// This could be as an estimation based on the average height of the bounding rectangles around
-		// the reflective tape marking the target. It could be a simple linear relationshi (e.g., each pixel
-		// indicates so many inches), or a non-linear relationship. Some testing will help figure it out.
+	// This is the tolerence to use when comparing the lidar distance to the visual
+	// based estimate.
+	// The visual estimate is consistent, but might not be accurate.
+	static final double LIDAR_VISUAL_COMPARE_TOLERANCE = 4.0; // inches
+
+
+	public double distanceToTarget() {
+		// This could be as an estimation based on the average height of the bounding
+		// rectangles around
+		// the reflective tape marking the target. It could be a simple linear
+		// relationshi (e.g., each pixel
+		// indicates so many inches), or a non-linear relationship. Some testing will
+		// help figure it out.
 		// I would suggest this value be puseh to the driver station to aid in testing
 
-		// you might also consider working in a check for the alignment line here to to get better
-		// accuracy up close. For example, if the alignment line shows we are lines up on target center,
+		// you might also consider working in a check for the alignment line here to to
+		// get better
+		// accuracy up close. For example, if the alignment line shows we are lines up
+		// on target center,
 		// the lidar may provide the best estimate of range
-		return 0.0 ;
+
+		double result = 0.0;
+		double lidarDistance = lidar.getDistace(); // wpk to-do need to fetch lidar value
+		if (targetIsPresent()) {
+			LimeLight.Target3D target = limeLight.getCamTranslation();
+			double x = target.translation.x;
+			double y = target.translation.y;
+			result = Math.sqrt((x*x)+(y*y));
+			if (result < LIDAR_DISTANCE_THRESHOLD && Math.abs(bearingToTarget()) < LIDAR_BEARING_TOLERANCE) {
+				if (Math.abs(result - lidarDistance) < LIDAR_VISUAL_COMPARE_TOLERANCE) {
+					result = lidarDistance;
+				}
+			}
+		} else {
+			// we can't see the target lines, so look at the alignment line
+			if (alignmentLineIsVisible()) {
+				if (Math.abs(bearingToTarget()) < LIDAR_BEARING_TOLERANCE) {
+					result = lidarDistance;
+				}
+			}
+		}
+
+		return result;
 	}
 
 
@@ -63,8 +101,8 @@ public class VisionSystem {
 		// then perhaps a bearing estimate can be computed from the difference in heights
 		// of the hash marks and the distance between them in pixels as compared to the know 8"
 		// distance called out in the game book.
-
-		return 0.0 ;
+		//TODO KOL: I made this by default just the limelight angle, add the alignment angle ASAP
+		return limeLight.getCamTranslation().rotation.y;
 
 	}
 

@@ -5,16 +5,13 @@ import edu.wpi.first.wpilibj.I2C;
 
 public class Lidar{
     public final int LIDARLITE_ADDR_DEFAULT = 0x62;
-    private I2C i2c;
-    private DistanceUpdater distUpdater = new DistanceUpdater();
+
+    private DistanceUpdater distUpdater;
 
     public Lidar(I2C.Port port) {
-        i2c = new I2C(port,LIDARLITE_ADDR_DEFAULT);
-        i2c.write(0x02,0x1d);
-
+        distUpdater = new DistanceUpdater(port);
     }
     public double getDistace(){
-        
         return accessDistance(true,0);
     }
 
@@ -26,7 +23,11 @@ public class Lidar{
         return 0;
     }
     class DistanceUpdater implements Runnable{
-
+        private I2C i2c;
+        public DistanceUpdater(I2C.Port port){
+            i2c = new I2C(port,LIDARLITE_ADDR_DEFAULT);
+            i2c.write(0x02,0x1d);
+        }
         @Override
         public void run(){
             while(true){
