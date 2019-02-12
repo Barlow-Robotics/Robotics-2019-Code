@@ -291,20 +291,18 @@ public class DriveSubsystem extends Subsystem {
 
                 if ( isInPosition() ) {
 					driveMode = DriveMode.Approaching ;
-					desiredTrackAngle = visionSystem.bearingToTarget() ;
-
 				} else {
 					// need to compute angle from front of bot to target so that we can make sure the
 					// target is centered in the limelight view.
-					double angleFromCenter = 0.0 ; // tbd
+					VisionSystem.BearingData b = visionSystem.bearingToTarget();
 
 					// convert the angle to a rotation input to the mecanum drive
-					double zRotation = 0.0 ;  // tbd
+					double zRotation = (-Math.pow(1.2,-Math.abs(b.angle))+1)*b.angle/Math.abs(b.angle);  // Graph of this ramp function: https://www.desmos.com/calculator/xal57r1qdk
 
 					// Once this angle is computed, the desired track will be updated so that the bot
 					// will move along the desired track after rotating the bot to center the target in the
 					// limelight field of view (FOV)
-					desiredTrackAngle = desiredTrackAngle + angleFromCenter ;  // should this be add or subtract?
+					desiredTrackAngle = desiredTrackAngle + b.angle;  // should this be add or subtract?
 
 					// wpk - need to think about the above line. Worried that its going to sum the change frame to frame
 					// which is not what we want. May need to record angle from nav x at start?

@@ -16,19 +16,31 @@ public class VisionSystem {
     private String alignmentNetTableName ;
     private Lidar lidar;
 	private LimeLight limeLight;
-
+	private ServerIn server;
     public void VisionSystem(String c, String alignmentNetTableName) {
         this.alignmentNetTableName = alignmentNetTableName ;
         this.lidar = new Lidar(I2C.Port.kOnboard);
         this.limeLight = new LimeLight();
-
+		this.server = new ServerIn(14579);
     }
 
+	public class BearingData{
+		public boolean exactAngle = false;
+		public double angle = 0;
+		public BearingData(boolean exactAngle, double angle){
+			this.exactAngle = exactAngle;
+			this.angle = angle;
+		}
+	}
 
     public boolean targetIsPresent() {
         return limeLight.hasTarget;
     }
 
+    public void updateVision(){
+    	server.updateAlignmentData();
+
+	}
 	// The tolerence of bearing to target at which we consider it safe to look at
 	// the lidar value.
 	// This is to make sure the lidar is pointing at the target and not off into
@@ -69,7 +81,8 @@ public class VisionSystem {
 			double x = target.translation.x;
 			double y = target.translation.y;
 			result = Math.sqrt((x*x)+(y*y));
-			if (result < LIDAR_DISTANCE_THRESHOLD && Math.abs(bearingToTarget()) < LIDAR_BEARING_TOLERANCE) {
+			BearingData b = bearingToTarget();
+			if (result < LIDAR_DISTANCE_THRESHOLD && b.exactAngle && Math.abs(b.angle) < LIDAR_BEARING_TOLERANCE) {
 				if (Math.abs(result - lidarDistance) < LIDAR_VISUAL_COMPARE_TOLERANCE) {
 					result = lidarDistance;
 				}
@@ -77,7 +90,8 @@ public class VisionSystem {
 		} else {
 			// we can't see the target lines, so look at the alignment line
 			if (alignmentLineIsVisible()) {
-				if (Math.abs(bearingToTarget()) < LIDAR_BEARING_TOLERANCE) {
+				BearingData b = bearingToTarget();
+				if (Math.abs(b.angle) < LIDAR_BEARING_TOLERANCE) {
 					result = lidarDistance;
 				}
 			}
@@ -87,7 +101,7 @@ public class VisionSystem {
 	}
 
 
-	public double bearingToTarget() {
+	public BearingData bearingToTarget() {
 		// wpk need to put estimation algiorithm here
 
 		// Some thoughts are:
@@ -101,22 +115,38 @@ public class VisionSystem {
 		// then perhaps a bearing estimate can be computed from the difference in heights
 		// of the hash marks and the distance between them in pixels as compared to the know 8"
 		// distance called out in the game book.
-		//TODO KOL: I made this by default just the limelight angle, add the alignment angle ASAP
-		return limeLight.getCamTranslation().rotation.y;
+
+
+		//We will only use the alignment line right now because Limelight angle code is buggy.
+		if(server.getLastPacket().Alignmentlines.length == 0){
+			//Use the wall rectangle to find bearing
+
+			if(server.getLastPacket().wallRects.length < 2 ) return new BearingData(false,0);
+
+			RotatedRect l = server.getLastPacket().wallRects[0],r = server.getLastPacket().wallRects[0];
+
+			for(RotatedRect rotatedRect : server.getLastPacket().wallRects){
+				if(l.center.x > rotatedRect.center.x) l = rotatedRect;
+				if(r.center.x < rotatedRect.center.x) r = rotatedRect;
+			}
+
+			return new BearingData(false,l.size.height > r.size.height ? -1 : 1); // -1: turn left, 1: turn right
+		}
+
+		return new BearingData(true,server.getLastPacket().centerLine.angle);
 
 	}
 
 
     public boolean alignmentLineIsVisible() {
-		// wpk - to do
-		// return true if the alignment cam sees a line that correlates with the target lines
-		return false ; // tbd
+
+		return server.getLastPacket().Alignmentlines.length > 0 ; // tbd
 	}
 
 
 	public RotatedRect getAlignmentRectangle() {
 		// wpk this needs to be filled in. 
-		return new RotatedRect() ;
+		return server.getLastPacket().centerLine;
 	}
  
 

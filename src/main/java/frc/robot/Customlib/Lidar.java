@@ -7,9 +7,11 @@ public class Lidar{
     public final int LIDARLITE_ADDR_DEFAULT = 0x62;
 
     private DistanceUpdater distUpdater;
-
+    private Thread lidarThread;
     public Lidar(I2C.Port port) {
         distUpdater = new DistanceUpdater(port);
+        lidarThread = new Thread(distUpdater);
+        lidarThread.start();
     }
     public double getDistace(){
         return accessDistance(true,0);
