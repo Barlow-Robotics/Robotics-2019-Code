@@ -15,12 +15,12 @@ public class VisionSystem {
     private String  targetNetTableName ;
     private String alignmentNetTableName ;
     private Lidar lidar;
-	private LimeLight limeLight;
+	public LimeLight limeLight = new LimeLight();
 	private ServerIn server;
+
     public void VisionSystem(String c, String alignmentNetTableName) {
         this.alignmentNetTableName = alignmentNetTableName ;
         this.lidar = new Lidar(I2C.Port.kOnboard);
-        this.limeLight = new LimeLight();
 		this.server = new ServerIn(14579);
     }
 

@@ -36,15 +36,15 @@ public class LimeLight  {
 		}
 
 	}
-	class Vector3f{
-		double x,y,z;
+	public class Vector3f{
+		public double x,y,z;
 		public Vector3f(double x, double y, double z){
 			this.x = x;
 			this.y = y;
 			this.z = z;
 		}
 	}
-	class Target3D{
+	public class Target3D{
 
 		public Vector3f translation, rotation;
 		public Target3D(Vector3f translation, Vector3f rotation){

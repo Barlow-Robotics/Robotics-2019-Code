@@ -28,7 +28,9 @@ public class DriveCommand extends Command {
                 Robot.driveSubsystem.SetModeAutoApproach();
             }
         }
-            
+        if(OI.getPlaystation().getRawButton(2)){
+            Robot.driveSubsystem.setModePositioning();
+        }
         if (Math.abs(OI.getPlaystationX()) >= .2 || Math.abs(OI.getPlaystationY()) >= .2
                 || Math.abs(OI.getPlaystationZ()) >= .2)
             Robot.driveSubsystem.SetModeManual();

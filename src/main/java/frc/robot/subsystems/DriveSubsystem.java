@@ -228,7 +228,9 @@ public class DriveSubsystem extends Subsystem {
 		// backLeftSpeedCtrl.reset() ;
 		// backRightSpeedCtrl.reset() ;
 	}
-
+	public void setModePositioning() {
+		driveMode = DriveMode.Positioning;
+	}
 
 	private boolean isInPosition() {
 		// need to determine if we are close enough to the target and are aligned with it.
@@ -294,10 +296,17 @@ public class DriveSubsystem extends Subsystem {
 				} else {
 					// need to compute angle from front of bot to target so that we can make sure the
 					// target is centered in the limelight view.
+// 					LimeLight.Target3D targ = visionSystem.limeLight.getCamTranslation();
+//					double xOff = visionSystem.limeLight.getXOffset();
+//					double zRotation =  Math.abs(xOff) > 10 ? 0.5*xOff/Math.abs(xOff) : 0;
+//					double xMove = xOff > 2 ? targ.translation.x/Math.abs(targ.translation.x) : 0;
+
+
 					VisionSystem.BearingData b = visionSystem.bearingToTarget();
 
+
 					// convert the angle to a rotation input to the mecanum drive
-					double zRotation = (-Math.pow(1.2,-Math.abs(b.angle))+1)*b.angle/Math.abs(b.angle);  // Graph of this ramp function: https://www.desmos.com/calculator/xal57r1qdk
+
 
 					// Once this angle is computed, the desired track will be updated so that the bot
 					// will move along the desired track after rotating the bot to center the target in the
@@ -307,7 +316,7 @@ public class DriveSubsystem extends Subsystem {
 					// wpk - need to think about the above line. Worried that its going to sum the change frame to frame
 					// which is not what we want. May need to record angle from nav x at start?
 
-					robotDrive.driveCartesian( 0.0, 1.0, zRotation, desiredTrackAngle ) ;
+					robotDrive.driveCartesian( 0.0, xMove, zRotation, desiredTrackAngle ) ;
 			    }
 			    break ;
 
@@ -361,6 +370,11 @@ public class DriveSubsystem extends Subsystem {
 		}
 
 	}
+	// Graph of this ramp function: https://www.desmos.com/calculator/xal57r1qdk
+	public double approachFunction(double angle){
+		return (-Math.pow(1.2,-Math.abs(angle))+1)*angle/Math.abs(angle);
+	}
+
 	public double threshHold(double in, double thresh){
 		return Math.abs(in) > thresh ? in : 0;
 	}
