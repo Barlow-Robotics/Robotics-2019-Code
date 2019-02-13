@@ -19,7 +19,6 @@ public class ServerOut{
     	try {
 			socket = new DatagramSocket();
 		} catch (SocketException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
         }
         this.ip = ip;
