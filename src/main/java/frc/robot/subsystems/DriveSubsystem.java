@@ -93,7 +93,7 @@ public class DriveSubsystem extends Subsystem {
 	private MecanumDrive robotDrive ;
 	ServerSocket outputSocket;
 	// 
-	private VisionSystem visionSystem ;
+	private VisionSystem visionSystem = new VisionSystem();
 	
 	// private LimeLight limelight;
 	// private Encoder testEncoder;
@@ -236,12 +236,12 @@ public class DriveSubsystem extends Subsystem {
 		// need to determine if we are close enough to the target and are aligned with it.
 
 		// I recommend an approach such as :
-		if ( visionSystem.distanceToTarget() <= APPROACH_DISTANCE && visionSystem.alignmentLineIsVisible() ) {
-			return true ;
-		} else {
-			return false ;
-		}
-
+		// if ( visionSystem.distanceToTarget() <= APPROACH_DISTANCE && visionSystem.alignmentLineIsVisible() ) {
+		// 	return true ;
+		// } else {
+		// 	return false ;
+		// }
+			return false;
 	}
 
 
@@ -292,17 +292,17 @@ public class DriveSubsystem extends Subsystem {
 			case Positioning :
 
                 if ( isInPosition() ) {
-					driveMode = DriveMode.Approaching ;
+					//driveMode = DriveMode.Approaching ;
 				} else {
 					// need to compute angle from front of bot to target so that we can make sure the
 					// target is centered in the limelight view.
-// 					LimeLight.Target3D targ = visionSystem.limeLight.getCamTranslation();
-//					double xOff = visionSystem.limeLight.getXOffset();
-//					double zRotation =  Math.abs(xOff) > 10 ? 0.5*xOff/Math.abs(xOff) : 0;
-//					double xMove = xOff > 2 ? targ.translation.x/Math.abs(targ.translation.x) : 0;
+					LimeLight.Target3D targ = visionSystem.limeLight.getCamTranslation();
+					double xOff = visionSystem.limeLight.getXOffset();
+					double zRotation =  Math.abs(xOff) > 10 ? 0.5*xOff/Math.abs(xOff) : 0;
+					double xMove = xOff > 2 ? targ.translation.x/Math.abs(targ.translation.x) : 0;
 
 
-					VisionSystem.BearingData b = visionSystem.bearingToTarget();
+					//VisionSystem.BearingData b = visionSystem.bearingToTarget();
 
 
 					// convert the angle to a rotation input to the mecanum drive
@@ -311,12 +311,12 @@ public class DriveSubsystem extends Subsystem {
 					// Once this angle is computed, the desired track will be updated so that the bot
 					// will move along the desired track after rotating the bot to center the target in the
 					// limelight field of view (FOV)
-					desiredTrackAngle = desiredTrackAngle + b.angle;  // should this be add or subtract?
+					//desiredTrackAngle = desiredTrackAngle + b.angle;  // should this be add or subtract?
 
 					// wpk - need to think about the above line. Worried that its going to sum the change frame to frame
 					// which is not what we want. May need to record angle from nav x at start?
 
-					robotDrive.driveCartesian( 0.0, xMove, zRotation, desiredTrackAngle ) ;
+					robotDrive.driveCartesian( xMove, 0.0, zRotation, 0 ) ;
 			    }
 			    break ;
 

@@ -29,8 +29,8 @@ public class RobotMap {
 		public static final int[] backLeftEncoderPorts = {4, 5};
 		public static final int[] backRightEncoderPorts = {2, 3};
 
-		public static final int HES_L = 8;
-		public static final int HES_R = 9;
+		public static final int HES_F = 9;
+		public static final int HES_B = 8;
 	}
   	//CONTROLLER
 	//Test

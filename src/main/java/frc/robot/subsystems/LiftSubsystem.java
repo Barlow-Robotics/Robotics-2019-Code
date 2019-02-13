@@ -9,6 +9,7 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.command.Subsystem;
 import frc.robot.OI;
+import frc.robot.Robot;
 import frc.robot.RobotMap;
 import frc.robot.commands.LiftCommand;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -20,31 +21,42 @@ import edu.wpi.first.wpilibj.Spark;
 public class LiftSubsystem extends Subsystem {
   // Put methods for controlling this subsystem
   // here. Call these from Commands.
-  public static int posistion = 0;
-  public static boolean movinUp = false;
-  
-  
-  enum Position{
-    bottom(-1), middle(0), top(1), none(0);
-    private int val;
 
-    private Position(){}
-
-    private Position(int value){
-        val = value;
-    }
-
-    public int getValue(){
-        return val;
-    }
-
-  }
   public Spark liftMotor = new Spark(RobotMap.PWM.LIFT_MOTOR_PORT);
-  public DigitalInput HES_L = new DigitalInput(RobotMap.DIO.HES_L);
-  public DigitalInput HES_R = new DigitalInput(RobotMap.DIO.HES_R);
-  public Position Lastposition = Position.bottom;
-  public Position goTo = Position.none;
+  public DigitalInput HES_F = new DigitalInput(RobotMap.DIO.HES_F);
+  public DigitalInput HES_B = new DigitalInput(RobotMap.DIO.HES_B);
+  public int command;
+  public int location = -1;
+  public int prevLocation = -1;
+  public boolean goingUp = false;
 
+  public void lift(){
+    if(command != location){
+      if(location < command){
+        Robot.liftSubsystem.liftMotor.set(.5);
+      }
+      else if(location > command){
+      Robot.liftSubsystem.liftMotor.set(-.3);
+      }
+    }
+    else{
+      Robot.liftSubsystem.liftMotor.set(0);
+    }
+  }
+  public void setCommand(int newCommand){
+    command = newCommand;
+  }
+  public void getLocation(){
+    if(HES_F.get() && !HES_B.get()){
+      location = -1;
+    }
+    else if(HES_F.get() && HES_B.get()){
+      location = 0;
+    }
+    else if(!HES_F.get() && HES_B.get()){
+      location = 1;
+    }
+  }
   //public static DigitalInput HES_L = new DigitalInput(RobotMap.DIO.HES_M);
   //public static DigitalInput HES_R = new DigitalInput(RobotMap.DIO.HES_T);
 
@@ -52,46 +64,5 @@ public class LiftSubsystem extends Subsystem {
   public void initDefaultCommand() {
     // Set the default command for a subsystem here.
     setDefaultCommand(new LiftCommand());
-  }
-
-  public void setPosition(Position where){
-      goTo = where;
-  }
-
-  private final int DELAY = 2;
-  private int currentCnt = DELAY;
-  public void liftIt(){
-    if(currentCnt == 0){
-      checkPositions();
-      currentCnt = DELAY;
-    }
-
-    /*
-     * Set the position you want to go to 
-     */
-    if(OI.getBox().getRawButton(6)) goTo = Position.bottom; // Bottom
-    if(OI.getBox().getRawButton(4)) goTo = Position.middle; // Middle
-    if(OI.getBox().getRawButton(3)) goTo = Position.top;    // Top
-
-    if(Lastposition == goTo) goTo = Position.none; //Go nowhere if you reach the destination 
-    if(goTo == Position.middle){
-      liftMotor.set(-Lastposition.getValue() * directionModifier(-Lastposition.getValue())); //If middle set, move away from the top or bottom (Depends on last position)
-    }else{
-      liftMotor.set(goTo.getValue() * directionModifier(goTo.getValue())); //Go to 
-    }
-
-  }
-
-  public static final double DWN_SPEED = 0; 
-  public double directionModifier(double input){
-    return input > 0 ? 0.8 : 0.5;
-  }
-    /*
-     * Set the last position to the last sensor to detect the lift 
-     */
-  public void checkPositions(){
-    if(!HES_L.get() && HES_R.get()) Lastposition = Position.bottom;
-    if(!HES_L.get() && !HES_R.get()) Lastposition = goTo.val == 1 ? Position.bottom : Position.top;
-    if(HES_L.get() && !HES_R.get()) Lastposition = Position.top;
   }
 }

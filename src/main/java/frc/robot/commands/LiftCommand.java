@@ -29,6 +29,10 @@ public class LiftCommand extends Command {
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
+    Robot.liftSubsystem.lift();
+    if(OI.getBox().getRawButton(6)) Robot.liftSubsystem.command = -1;
+    if(OI.getBox().getRawButton(4)) Robot.liftSubsystem.command = 0;
+    if(OI.getBox().getRawButton(3)) Robot.liftSubsystem.command = 1;
   }
 
   // Make this return true when this Command no longer needs to run execute()
