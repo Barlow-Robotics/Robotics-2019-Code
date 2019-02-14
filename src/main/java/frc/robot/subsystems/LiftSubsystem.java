@@ -25,36 +25,92 @@ public class LiftSubsystem extends Subsystem {
   public Spark liftMotor = new Spark(RobotMap.PWM.LIFT_MOTOR_PORT);
   public DigitalInput HES_F = new DigitalInput(RobotMap.DIO.HES_F);
   public DigitalInput HES_B = new DigitalInput(RobotMap.DIO.HES_B);
-  public int command;
-  public int location = -1;
-  public int prevLocation = -1;
-  public boolean goingUp = false;
-
+  enum CommandEnum {Bottom, Middle, Top, None};
+  enum StateEnum {Bottom, BottomToMiddle, Middle, MiddleToBottomleavingMiddle, MiddleToBottomWaitingBottom,  MiddleToTopLeavingMiddle, MiddleToTopWaitingTop, Top, TopToMiddle};
+  CommandEnum commandedState ;
+  StateEnum currentState ;
+  private final double UP_SPEED = 0.5;
+  private final double DOWN_SPEED = -0.3;
   public void lift(){
-    if(command != location){
-      if(location < command){
-        Robot.liftSubsystem.liftMotor.set(.5);
-      }
-      else if(location > command){
-      Robot.liftSubsystem.liftMotor.set(-.3);
-      }
-    }
-    else{
-      Robot.liftSubsystem.liftMotor.set(0);
-    }
+    switch ( currentState){
+      case Bottom: 
+         if ( commandedState != CommandEnum.Bottom) {
+          liftMotor.set( UP_SPEED) ;
+          currentState = StateEnum.BottomToMiddle ;
+         }
+         else{
+           liftMotor.set(0);
+         }
+         break ;
+      case BottomToMiddle:
+         if ( getLocation() == CommandEnum.Middle) {
+             currentState = StateEnum.Middle ;
+         }
+         //else if( getLocation() == CommandEnum.Bottom){
+         //  currentState = StateEnum.Bottom;
+         //}
+         break ;
+      case Middle:
+         if ( commandedState == CommandEnum.Bottom) {
+             liftMotor.set(DOWN_SPEED) ;
+             currentState = StateEnum.MiddleToBottomleavingMiddle;
+         } else if ( commandedState == CommandEnum.Top) {
+           liftMotor.set(UP_SPEED);
+            currentState = StateEnum.MiddleToTopLeavingMiddle ;
+         } else {
+           liftMotor.set(0.0) ;
+         }
+         break ;
+      case MiddleToTopLeavingMiddle:
+         // if we've left the middle
+         if ( getLocation() == CommandEnum.None) {
+             currentState = StateEnum.MiddleToTopWaitingTop ;
+         }
+         break ;
+      case MiddleToTopWaitingTop:
+         if(getLocation() == CommandEnum.Top){
+           currentState = StateEnum.Top;
+         }
+         break;
+      case MiddleToBottomleavingMiddle:
+         if ( getLocation() == CommandEnum.None) {
+            currentState = StateEnum.MiddleToBottomWaitingBottom ;
+         }
+         break ;
+      case MiddleToBottomWaitingBottom:
+         if ( getLocation() == CommandEnum.Bottom) {
+           currentState = StateEnum.Bottom ;
+         } 
+
+
+      case Top:
+         if(commandedState != CommandEnum.Top){
+           liftMotor.set(DOWN_SPEED);
+           currentState = StateEnum.TopToMiddle ;
+         }
+         
+        break ;
+       case TopToMiddle:
+         if( getLocation() == CommandEnum.Middle) {
+           currentState = StateEnum.Middle ;
+         }
+         break ;
+        }
+        
+         
   }
-  public void setCommand(int newCommand){
-    command = newCommand;
-  }
-  public void getLocation(){
+  public CommandEnum getLocation(){
     if(HES_F.get() && !HES_B.get()){
-      location = -1;
+      return CommandEnum.Bottom;
     }
     else if(HES_F.get() && HES_B.get()){
-      location = 0;
+      return CommandEnum.Middle;
     }
     else if(!HES_F.get() && HES_B.get()){
-      location = 1;
+      return CommandEnum.Top;
+    }
+    else{
+      return CommandEnum.None;
     }
   }
   //public static DigitalInput HES_L = new DigitalInput(RobotMap.DIO.HES_M);
