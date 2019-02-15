@@ -6,12 +6,11 @@
 /*----------------------------------------------------------------------------*/
 
 package frc.robot.commands;
-
-import edu.wpi.first.wpilibj.command.Command;
-import edu.wpi.first.wpilibj.*;
 import frc.robot.Robot;
 import frc.robot.OI;
-
+import edu.wpi.first.wpilibj.command.Command;
+import edu.wpi.first.wpilibj.*;
+//////////////////////////////////////////////
 public class ArmCommand extends Command {
   public static boolean check1 = false;
   public static boolean check2 = false;

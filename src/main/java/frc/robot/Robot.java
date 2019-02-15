@@ -37,7 +37,6 @@ public class Robot extends TimedRobot {
   public static DriveSubsystem driveSubsystem = new DriveSubsystem();
   public static ArmSubsystem armSubsystem = new ArmSubsystem();
   public static LiftSubsystem liftSubsystem = new LiftSubsystem();
-
   public  OI m_oi;
 
   Command m_autonomousCommand;
@@ -52,7 +51,7 @@ public class Robot extends TimedRobot {
     // DriveSubsystem.getFrontLeftMotor().setInverted(true);
     // DriveSubsystem.getBackLeftMotor().setInverted(true);
 
-
+    Robot.liftSubsystem.liftMotor.setInverted(true);
     CameraServer.getInstance().addAxisCamera("LimeLight", "10.45.72.59:5800");
     ArmSubsystem.compressor.start();
     m_oi = new OI();

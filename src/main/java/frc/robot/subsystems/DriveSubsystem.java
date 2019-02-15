@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import frc.robot.OI;
+import frc.robot.Robot;
 import frc.robot.RobotMap;
 import frc.robot.Customlib.*;
 import frc.robot.commands.DriveCommand;
@@ -275,6 +276,8 @@ public class DriveSubsystem extends Subsystem {
 		SmartDashboard.putNumber("KP", KP);
 		SmartDashboard.putNumber("KI", KI);
 		SmartDashboard.putNumber("KD", KD);
+		SmartDashboard.putBoolean("HEffect_F",Robot.liftSubsystem.HES_F.get());
+		SmartDashboard.putBoolean("HEffect_B",Robot.liftSubsystem.HES_B.get());
 
 		if(driveMode == null) driveMode = DriveMode.Manual;
         switch ( driveMode ) {

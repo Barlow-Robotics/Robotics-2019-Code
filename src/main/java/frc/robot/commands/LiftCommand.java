@@ -30,9 +30,9 @@ public class LiftCommand extends Command {
   @Override
   protected void execute() {
     Robot.liftSubsystem.lift();
-    if(OI.getBox().getRawButton(6)) Robot.liftSubsystem.command = -1;
-    if(OI.getBox().getRawButton(4)) Robot.liftSubsystem.command = 0;
-    if(OI.getBox().getRawButton(3)) Robot.liftSubsystem.command = 1;
+    if(OI.getBox().getRawButton(6)) Robot.liftSubsystem.commandedState = LiftSubsystem.CommandEnum.Bottom;
+    if(OI.getBox().getRawButton(4)) Robot.liftSubsystem.commandedState = LiftSubsystem.CommandEnum.Middle;
+    if(OI.getBox().getRawButton(3)) Robot.liftSubsystem.commandedState = LiftSubsystem.CommandEnum.Top;
   }
 
   // Make this return true when this Command no longer needs to run execute()
