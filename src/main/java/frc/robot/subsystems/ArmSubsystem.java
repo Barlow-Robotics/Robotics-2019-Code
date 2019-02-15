@@ -10,6 +10,7 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.command.Subsystem;
+import frc.robot.OI;
 import frc.robot.RobotMap;
 import frc.robot.commands.ArmCommand;
 import edu.wpi.first.wpilibj.Solenoid;
@@ -23,6 +24,7 @@ public class ArmSubsystem extends Subsystem {
 	public static Solenoid closeSolenoidExtend = new Solenoid(RobotMap.closeExtendSolenoidPort);
   public static boolean openClaw = false;
   public static boolean openExtend = false;
+  public boolean hasDisk = false;
 
     public void initDefaultCommand() {
       setDefaultCommand(new ArmCommand());	
@@ -94,6 +96,22 @@ public class ArmSubsystem extends Subsystem {
     private void updateExtendSolenoids() {
     	openSolenoidExtend.set(openExtend);
     	closeSolenoidExtend.set(!openExtend);
+    }
+
+    public void getDisk(){
+      
+        openExtend();
+        openClaw();
+        hasDisk = true;
+        closeExtend();
+    
+    }
+
+    public void putDisk(){
+        openExtend();
+        closeClaw();
+        hasDisk = false;
+        closeExtend();
     }
 
 }

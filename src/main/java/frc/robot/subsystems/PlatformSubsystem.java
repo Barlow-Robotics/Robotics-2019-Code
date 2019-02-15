@@ -8,6 +8,7 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.command.Subsystem;
+import edu.wpi.first.wpilibj.Solenoid;
 
 /**
  * Add your docs here.
@@ -19,10 +20,32 @@ public class PlatformSubsystem extends Subsystem {
   double platFormHeight = 0;
   double heightGroundAdjustment = 5;
   double heightPlatormAdjustment = 10;
+  
+  public static Solenoid openSolenoidBack = new Solenoid(4);
+	public static Solenoid closeSolenoidBack = new Solenoid(5);
+  public static Solenoid openSolenoidFront = new Solenoid(6);
+  public static Solenoid closeSolenoidFront = new Solenoid(7);
+  public static boolean openBack = false;
+  public static boolean openFront = false;
   @Override
   public void initDefaultCommand() {
   }
-
+  public void toggleFront(){
+    openFront = !openFront;
+    updateFrontSolenoids();
+  }
+  public void toggleBack(){
+    openBack = !openBack;
+    updateBackSolenoids();
+  }
+  private void updateBackSolenoids() {
+    openSolenoidBack.set(openBack);
+    closeSolenoidBack.set(!openBack);
+  }
+  private void updateFrontSolenoids() {
+    openSolenoidFront.set(openFront);
+    closeSolenoidFront.set(!openFront);
+  }
   public void checkHeight(){
     // if(sensor1-heightGroundAdjustment > defaultHeight && sensor2-heightGroundAdjustment > defaultHeight){
     //     if(sensor-10 >= platFormHeight){

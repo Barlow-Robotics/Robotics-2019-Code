@@ -12,14 +12,13 @@ public class VisionSystem {
 	// Since the vision processing is running on the Raspberry Pi, Network tables should be used to
 	// transfer the data from the Pi to the Rio.
 
-    private String  targetNetTableName ;
-    private String alignmentNetTableName ;
+    // private String  targetNetTableName ;
+    // private String alignmentNetTableName ;
     private Lidar lidar;
 	public LimeLight limeLight = new LimeLight();
 	private ServerIn server;
 
-    public void VisionSystem(String c, String alignmentNetTableName) {
-        this.alignmentNetTableName = alignmentNetTableName ;
+    public VisionSystem() {
         this.lidar = new Lidar(I2C.Port.kOnboard);
 		this.server = new ServerIn(14579);
     }

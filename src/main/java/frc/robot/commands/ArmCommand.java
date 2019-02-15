@@ -9,7 +9,6 @@ package frc.robot.commands;
 import frc.robot.Robot;
 import frc.robot.OI;
 import edu.wpi.first.wpilibj.command.Command;
-import edu.wpi.first.wpilibj.*;
 //////////////////////////////////////////////
 public class ArmCommand extends Command {
   public static boolean check1 = false;
@@ -29,7 +28,7 @@ public class ArmCommand extends Command {
   @Override
   protected void execute() {
     
-    if(OI.getPlaystation().getRawButton(4)){
+  if(OI.getPlaystation().getRawButton(4)){
         Robot.armSubsystem.openClaw();
     }else{
         Robot.armSubsystem.closeClaw();
@@ -39,7 +38,25 @@ public class ArmCommand extends Command {
   }else{
       Robot.armSubsystem.closeExtend();
   }
+  if(OI.getPlaystation().getRawButton(9) && Robot.armSubsystem.hasDisk){
+    Robot.armSubsystem.getDisk();
   }
+  if(OI.getPlaystation().getRawButtonPressed(7)){
+    Robot.platformSubsystem.toggleFront();
+  }else if (OI.getPlaystation().getRawButtonReleased(7)){
+    Robot.platformSubsystem.toggleFront();
+  }
+  if(OI.getPlaystation().getRawButtonPressed(8)){
+    Robot.platformSubsystem.toggleBack();
+  }else if (OI.getPlaystation().getRawButtonReleased(8)){
+    Robot.platformSubsystem.toggleBack();
+  }
+  if(OI.getPlaystation().getRawButton(9) && !Robot.armSubsystem.hasDisk){
+    Robot.armSubsystem.putDisk();
+  }
+
+  }
+  
 
   // Make this return true when this Command no longer needs to run execute()
   @Override

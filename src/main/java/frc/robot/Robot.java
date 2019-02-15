@@ -19,6 +19,7 @@ import frc.robot.commands.LiftCommand;
 import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.LiftSubsystem;
+import frc.robot.subsystems.PlatformSubsystem;
 import frc.robot.Customlib.*;
 
 
@@ -37,6 +38,7 @@ public class Robot extends TimedRobot {
   public static DriveSubsystem driveSubsystem = new DriveSubsystem();
   public static ArmSubsystem armSubsystem = new ArmSubsystem();
   public static LiftSubsystem liftSubsystem = new LiftSubsystem();
+  public static PlatformSubsystem platformSubsystem = new PlatformSubsystem();
   public  OI m_oi;
 
   Command m_autonomousCommand;
