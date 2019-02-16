@@ -44,7 +44,7 @@ public class DriveSubsystem extends Subsystem {
 	private final double FINAL_APPROACH_SPEED_FACTOR = 0.25 ; // wpk - place holder value for now
 
 	// Distance at which we will start our approach
-	private final int APPROACH_DISTANCE = 15 ; // wpk - place holder value for now
+	private final double APPROACH_DISTANCE = 20.0 ; // wpk - place holder value for now
 	// Speed we will use for start of our approach
 	private final double APPROACH_SPEED_FACTOR = 0.5 ; // wpk - place holder value for now
 
@@ -211,6 +211,8 @@ public class DriveSubsystem extends Subsystem {
 
 	// wpk - not sure who callls this, but it would be in response to the operator pressing
 	// the auto button.
+
+	
 	public void SetModeAutoApproach() {
 
 		if ( isAutoAvailable() ) {
@@ -218,8 +220,20 @@ public class DriveSubsystem extends Subsystem {
 			// the target
 
 			 
-			startingHeading = nav.getFusedHeading() ;  // wpk need to make sure this is the right function to call
-			desiredTrackAngle = 0;
+			startingHeading = nav.getAngle() ;
+			double bearing = visionSystem.bearingToTarget().angle;  // wpk need to make sure this is the right function to call
+
+            double bearingInRadians = Math.toRadians(bearing);
+
+			double distanceToTarget = visionSystem.distanceToTarget() ;
+			double distanceToApproach 
+			   = Math.sqrt(distanceToTarget*distanceToTarget
+						   + APPROACH_DISTANCE*APPROACH_DISTANCE
+						   - 2.0*APPROACH_DISTANCE*visionSystem.distanceToTarget()*Math.cos(bearingInRadians)) ;
+			
+
+
+			desiredTrackAngle = Math.toDegrees(Math.asin(APPROACH_DISTANCE*Math.sin(bearingInRadians)/distanceToApproach) );
 
 			driveMode = DriveMode.Positioning ;
 		}
@@ -239,6 +253,7 @@ public class DriveSubsystem extends Subsystem {
 	}
 	public void setModePositioning() {
 		driveMode = DriveMode.Positioning;
+		System.out.println("In positioning mode");
 	}
 
 	private boolean isInPosition() {
@@ -279,6 +294,7 @@ public class DriveSubsystem extends Subsystem {
 		visionSystem.updateVision();
 		SmartDashboard.putBoolean("AutoEnabled", isAutoAvailable());
 		SmartDashboard.putNumber("NavAngle",nav.getAngle());
+		SmartDashboard.putString("Drive mode", driveMode.name());
 		SmartDashboard.putString("frontLeftEncoder", frontLeftEncoder.getRate()+"");
 		SmartDashboard.putString("frontRightEncoder", frontRightEncoder.getRate()+"");
 		SmartDashboard.putString("backRightEncoder", backRightEncoder.getRate()+"");
@@ -290,6 +306,8 @@ public class DriveSubsystem extends Subsystem {
 		SmartDashboard.putBoolean("HEffect_B",Robot.liftSubsystem.HES_B.get());
 
 		if(driveMode == null) driveMode = DriveMode.Manual;
+		VisionSystem.BearingData b = visionSystem.bearingToTarget();
+		SmartDashboard.putNumber("Bearing",b.angle);
         switch ( driveMode ) {
 			
 			case Manual :
@@ -306,6 +324,7 @@ public class DriveSubsystem extends Subsystem {
 
                 if ( isInPosition() ) {
 					driveMode = DriveMode.Approaching ;
+					System.out.println("Switching to approach mode");
 				} else {
 					// need to compute angle from front of bot to target so that we can make sure the
 					// target is centered in the limelight view.
@@ -315,8 +334,8 @@ public class DriveSubsystem extends Subsystem {
 					// double xMove = xOff > 2 ? targ.translation.x/Math.abs(targ.translation.x) : 0;
 
 
-					VisionSystem.BearingData b = visionSystem.bearingToTarget();
 
+					System.out.println("Bearing: " + b.angle + "\tTrack: " + desiredTrackAngle + "\t SNavHead: " + startingHeading + "\t CNavHead: " + nav.getAngle() + "\t Dist: " + visionSystem.distanceToTarget());
 
 					// convert the angle to a rotation input to the mecanum drive
 
@@ -324,12 +343,14 @@ public class DriveSubsystem extends Subsystem {
 					// Once this angle is computed, the desired track will be updated so that the bot
 					// will move along the desired track after rotating the bot to center the target in the
 					// limelight field of view (FOV)
-					desiredTrackAngle = desiredTrackAngle + b.angle;  // should this be add or subtract?
+					desiredTrackAngle += startingHeading - nav.getAngle();  // should this be add or subtract?
 
 					// wpk - need to think about the above line. Worried that its going to sum the change frame to frame
 					// which is not what we want. May need to record angle from nav x at start?
 
-					robotDrive.driveCartesian(0, 1.0*DEBUG_MULTIPLIER, visionSystem.limeLight.getXOffset()/Math.abs(visionSystem.limeLight.getXOffset())*DEBUG_MULTIPLIER, desiredTrackAngle*DEBUG_MULTIPLIER ) ;
+					robotDrive.driveCartesian(-0.3, 0.0*DEBUG_MULTIPLIER,
+					 0, //TODO add this in
+					  desiredTrackAngle) ;
 			    }
 			    break ;
 
@@ -374,8 +395,8 @@ public class DriveSubsystem extends Subsystem {
 					}
 
 					ySpeed = approachSpeedFactorToTarget() ;
-
-					robotDrive.driveCartesian( ySpeed, xSpeed, zRotation, 0.0 ) ;
+					robotDrive.driveCartesian(0,0,0,0);
+					//robotDrive.driveCartesian( ySpeed, xSpeed, zRotation, 0.0 ) ;
 
 				}
 			    break ;

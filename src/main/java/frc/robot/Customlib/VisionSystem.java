@@ -82,8 +82,8 @@ public class VisionSystem {
 		if (targetIsPresent()) {
 			LimeLight.Target3D target = limeLight.getCamTranslation();
 			double x = target.translation.x;
-			double y = target.translation.y;
-			result = Math.sqrt((x*x)+(y*y));
+			double z = target.translation.z;
+			result = Math.sqrt((x*x)+(z*z));
 			BearingData b = bearingToTarget();
 			if (result < LIDAR_DISTANCE_THRESHOLD && b.exactAngle && Math.abs(b.angle) < LIDAR_BEARING_TOLERANCE) {
 				if (Math.abs(result - lidarDistance) < LIDAR_VISUAL_COMPARE_TOLERANCE) {
@@ -120,8 +120,11 @@ public class VisionSystem {
 		// distance called out in the game book.
 
 
-		//We will only use the alignment line right now because Limelight angle code is buggy.
-		if(server.getLastPacket().Alignmentlines.length == 0){
+		
+		if(limeLight.getHasTarget()){
+			return new BearingData(true,limeLight.getCamTranslation().rotation.y);
+		}
+			if(server.getLastPacket().Alignmentlines.length == 0){
 			//Use the wall rectangle to find bearing
 
 			if(server.getLastPacket().wallRects.length < 2 ) return new BearingData(false,0);
@@ -136,7 +139,7 @@ public class VisionSystem {
 			return new BearingData(false,l.size.height > r.size.height ? -1 : 1); // -1: turn left, 1: turn right
 		}
 
-		return new BearingData(true,server.getLastPacket().Alignmentlines[0].angle);
+		return new BearingData(false,0);
 
 	}
 
@@ -156,7 +159,7 @@ public class VisionSystem {
 			
 			if(Math.abs(rotatedRect.center.x - (limeLight.getXOffset()*320/54)) + ALIGNMENT_OFFSET  < ALIGNMENT_THRESHOLD)
 				return rotatedRect;
-			System.out.println("RRC: "+ rotatedRect.center.x + "\t LL XOFF: " + (limeLight.xOffset*320/54));
+			// System.out.println("RRC: "+ rotatedRect.center.x + "\t LL XOFF: " + (limeLight.xOffset*320/54));
 				
 		}
 		// SmartDashboard.putStringArray("Calculations",calcs.toArray(String[]::new));
