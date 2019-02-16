@@ -81,7 +81,7 @@ public class LimeLight  {
 	 * @return Returns the X offset from the crosshair
 	 */
 	public double getXOffset() {
-		xOffset = getLimetable().getEntry("tx").getDouble(0);
+		xOffset = getLimetable().getEntry("tx").getDouble(1);
 		return xOffset;
 	}
 	

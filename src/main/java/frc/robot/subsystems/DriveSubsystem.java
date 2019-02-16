@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import java.net.ServerSocket;
 import edu.wpi.first.wpilibj.Spark;
+import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import com.kauailabs.navx.frc.AHRS;
 import org.opencv.core.*;
@@ -32,7 +33,7 @@ public class DriveSubsystem extends Subsystem {
 	// fact that the PID controller may add some gain beyond the set point if the motor needs
 	// to "catch up" to the set value.
 	private final double MAX_ENCODER = 10000.0;
-
+	private final double DEBUG_MULTIPLIER = 0.3;
 	// This constant represents the reading from the distance sensor that indicates the
 	// bot is close enough to the target and we don't need to move any closer.
 	private final int CLOSE_ENOUGH = 5 ; // wpk - place holder value for now
@@ -109,7 +110,8 @@ public class DriveSubsystem extends Subsystem {
 	// This is the direction of travel we want the bot to follow when in positioning mode
 	private double desiredTrackAngle;
 
-	// This is the initial heading recorded when the bot went into auto approach mode
+	// This is the
+	// initial heading recorded when the bot went into auto approach mode
 	private double startingHeading ;
 
 	enum DriveMode {
@@ -166,7 +168,7 @@ public class DriveSubsystem extends Subsystem {
 		// alignmentCam = new WebCam() ;
 		// ard = new Arduino();
 		// gripz = new GripPipeline();
-		// nav = new AHRS(SPI.Port.kMXP);
+		nav = new AHRS(Port.kMXP);
 
 		driveMode = DriveMode.Manual;
 
@@ -178,7 +180,7 @@ public class DriveSubsystem extends Subsystem {
 	}
 
 
-
+	public static final int TOO_CLOSE = 10;
 	public boolean isAutoAvailable() {
 		// The logic here needs to look at the target areas returned by the limelight and
 		// make a determination whether a target is visible (i.e., two inward facing target lines).
@@ -187,16 +189,22 @@ public class DriveSubsystem extends Subsystem {
 		// If this is the only place you would ever want that, you could put it here. If you might want to
 		// that from other classes (e.g., cueing the operator), consider putting it in the limelight class 
 		// so its accessible elsewhere.
-		return false; // TBD
+		boolean aLVisible = visionSystem.alignmentLineIsVisible();
+		boolean hasTarget = visionSystem.limeLight.getHasTarget();
+		double dist = visionSystem.distanceToTarget();
+		SmartDashboard.putBoolean("aLVisible", aLVisible);
+		SmartDashboard.putBoolean("hasTarget", hasTarget);
+		SmartDashboard.putNumber("Targ Dist", dist);
+		return (aLVisible && dist < TOO_CLOSE) || hasTarget; // TBD
 	}
 
-
+	
     private boolean isCloseEnough() {
 
 		//wpk this function returns true if we have determined that the bot state can be 
 		// changed from positioning to approach. This might be as simple as checking the range to the target.
 
-		return false ;
+		return visionSystem.distanceToTarget() < CLOSE_ENOUGH;
 	}
 
 
@@ -209,9 +217,9 @@ public class DriveSubsystem extends Subsystem {
 			// need to set initial gyro and rotation values based on angle and distance to 
 			// the target
 
-			desiredTrackAngle = 0.0 ; // tbd need to compute angle relative to front of the bot
-			
+			 
 			startingHeading = nav.getFusedHeading() ;  // wpk need to make sure this is the right function to call
+			desiredTrackAngle = 0;
 
 			driveMode = DriveMode.Positioning ;
 		}
@@ -237,12 +245,11 @@ public class DriveSubsystem extends Subsystem {
 		// need to determine if we are close enough to the target and are aligned with it.
 
 		// I recommend an approach such as :
-		// if ( visionSystem.distanceToTarget() <= APPROACH_DISTANCE && visionSystem.alignmentLineIsVisible() ) {
-		// 	return true ;
-		// } else {
-		// 	return false ;
-		// }
-			return false;
+		if ( visionSystem.distanceToTarget() <= APPROACH_DISTANCE && visionSystem.alignmentLineIsVisible() ) {
+			return true ;
+		} else {
+			return false ;
+		}
 	}
 
 
@@ -269,6 +276,9 @@ public class DriveSubsystem extends Subsystem {
 
 	// Need to understand where this can be called from. Maybe command?
 	public void doDriving() {
+		visionSystem.updateVision();
+		SmartDashboard.putBoolean("AutoEnabled", isAutoAvailable());
+		SmartDashboard.putNumber("NavAngle",nav.getAngle());
 		SmartDashboard.putString("frontLeftEncoder", frontLeftEncoder.getRate()+"");
 		SmartDashboard.putString("frontRightEncoder", frontRightEncoder.getRate()+"");
 		SmartDashboard.putString("backRightEncoder", backRightEncoder.getRate()+"");
@@ -295,17 +305,17 @@ public class DriveSubsystem extends Subsystem {
 			case Positioning :
 
                 if ( isInPosition() ) {
-					//driveMode = DriveMode.Approaching ;
+					driveMode = DriveMode.Approaching ;
 				} else {
 					// need to compute angle from front of bot to target so that we can make sure the
 					// target is centered in the limelight view.
-					LimeLight.Target3D targ = visionSystem.limeLight.getCamTranslation();
-					double xOff = visionSystem.limeLight.getXOffset();
-					double zRotation =  Math.abs(xOff) > 10 ? 0.5*xOff/Math.abs(xOff) : 0;
-					double xMove = xOff > 2 ? targ.translation.x/Math.abs(targ.translation.x) : 0;
+					// LimeLight.Target3D targ = visionSystem.limeLight.getCamTranslation();
+					// double xOff = visionSystem.limeLight.getXOffset();
+					// double zRotation =  Math.abs(xOff) > 10 ? 0.5*xOff/Math.abs(xOff) : 0;
+					// double xMove = xOff > 2 ? targ.translation.x/Math.abs(targ.translation.x) : 0;
 
 
-					//VisionSystem.BearingData b = visionSystem.bearingToTarget();
+					VisionSystem.BearingData b = visionSystem.bearingToTarget();
 
 
 					// convert the angle to a rotation input to the mecanum drive
@@ -314,12 +324,12 @@ public class DriveSubsystem extends Subsystem {
 					// Once this angle is computed, the desired track will be updated so that the bot
 					// will move along the desired track after rotating the bot to center the target in the
 					// limelight field of view (FOV)
-					//desiredTrackAngle = desiredTrackAngle + b.angle;  // should this be add or subtract?
+					desiredTrackAngle = desiredTrackAngle + b.angle;  // should this be add or subtract?
 
 					// wpk - need to think about the above line. Worried that its going to sum the change frame to frame
 					// which is not what we want. May need to record angle from nav x at start?
 
-					robotDrive.driveCartesian( xMove, 0.0, zRotation, 0 ) ;
+					robotDrive.driveCartesian(0, 1.0*DEBUG_MULTIPLIER, visionSystem.limeLight.getXOffset()/Math.abs(visionSystem.limeLight.getXOffset())*DEBUG_MULTIPLIER, desiredTrackAngle*DEBUG_MULTIPLIER ) ;
 			    }
 			    break ;
 
@@ -382,118 +392,11 @@ public class DriveSubsystem extends Subsystem {
 		return Math.abs(in) > thresh ? in : 0;
 	}
 
-	// public static Spark getFrontLeftMotor() {
-	// return frontLeftMotor;
-	// }
-
-	// public static Spark getFrontRightMotor() {
-	// return frontRightMotor;
-	// }
-
-	// public static Spark getBackLeftMotor() {
-	// return backLeftMotor;
-	// }
-
-	// public static Spark getBackRightMotor() {
-	// return backRightMotor;
-	// }
-
-	// // Main Drive Function(called by DriveCommand)
-	// public static void mecanumDrive() {
-	// robotDrive.drive(OI.getPlaystation());
-	// }
-
-
     private double getCompassHeading() {
 		double navAngle = nav.getAngle() % 360;
 		if (navAngle < 0)
 			navAngle = 360 + navAngle;
 		return navAngle ;
 	}
-
-	// public void updateAngle() {
-	// 	navAngle = nav.getAngle() % 360;
-	// 	if (navAngle < 0)
-	// 		navAngle = 360 + navAngle;
-	// 	// System.out.println(navAngle);
-	// 	// String dta = ard.getData();
-	// 	// if(dta.charAt(dta.length()-1) == 'm')
-	// 	// System.out.println(dta);
-	// 	// System.out.println("Encoder: " + testEncoder.getRaw());
-	// }
-
-
-
-	// wpk the logic in here should be moved into the target detector
-	// commented out for now to address compiler errors
-
-	// public static void focusTape() {
-	// 	// if(!limelight.getHasTarget()) return;
-	// 	double horiz = limelight.getHorizontalLength();
-	// 	double vert = limelight.getVerticalLength();
-	// 	double tLong = limelight.getLong();
-	// 	double tShort = limelight.getShort();
-
-	// 	double offset = limelight.getXOffset();
-	// 	double skewOff = limelight.getSkew();
-	// 	String ardData = ard.getData();
-
-	// 	System.out.println("Horiz: " + horiz + ",    Vert: " + vert + ",    Long: " + tLong + ",    Short: " + tShort);
-
-	// 	double distance = 0;
-	// 	try {
-	// 		distance = Double.parseDouble(ardData.substring(0, ardData.length() - 1));
-	// 	} catch (Exception e) {
-	// 	}
-	// 	// double z = Math.abs(skewOff) >= 0.5 ? 0.3*(skewOff/Math.abs(skewOff)) : 0;
-	// 	double x = 0;
-	// 	double y = 0;
-	// 	if (limelight.getHasTarget())
-	// 		x = Math.abs(offset) >= 2.5 ? 0.7 * (offset / Math.abs(offset)) : 0;
-
-	// 	// System.out.println(distance);
-	// 	Mat frame = new Mat();
-
-	// 	CameraServer.getInstance().getVideo("LimeLight").grabFrame(frame);
-
-	// 	y = Math.abs(distance) >= 30 ? .3 : 0;
-
-	// 	// System.out.println(x);
-	// 	double z = 0.3 * calcAngle(frame);
-	// 	try {
-	// 		robotDrive.drive(x, y, z);
-	// 	} catch (NonNormalizedNumber e) {
-	// 		System.err.println(e);
-	// 	}
-
-	// }
-
-	// public static int calcAngle(Mat input) {
-	// 	gripz.process(input);
-	// 	ArrayList<MatOfPoint> contours = gripz.filterContoursOutput();
-	// 	ArrayList<Rect> out = new ArrayList<Rect>();
-	// 	for (MatOfPoint cont : contours)
-	// 		out.add(Imgproc.boundingRect(cont));
-
-	// 	ArrayList<Rect> sortedOut = new ArrayList<Rect>();
-
-	// 	for (Rect rect : out) {
-	// 		if (sortedOut.size() == 0) {
-	// 			sortedOut.add(rect);
-	// 			continue;
-	// 		}
-	// 		for (int i = 0; i < sortedOut.size(); i++) {
-	// 			if (sortedOut.get(i).x < rect.x) {
-	// 				sortedOut.add(i, rect);
-	// 				continue;
-	// 			}
-	// 			sortedOut.add(rect);
-	// 		}
-	// 	}
-
-	// 	double areaR = sortedOut.get(0).y * sortedOut.get(0).x;
-	// 	double areaL = sortedOut.get(sortedOut.size() - 1).y * sortedOut.get(sortedOut.size() - 1).x;
-	// 	return (Math.abs(areaR - areaL) >= 100) ? -1 : 1;
-	// }
 
 }

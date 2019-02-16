@@ -38,7 +38,7 @@ public class ArmCommand extends Command {
   }else{
       Robot.armSubsystem.closeExtend();
   }
-  if(OI.getPlaystation().getRawButton(9) && Robot.armSubsystem.hasDisk){
+  if(OI.getPlaystation().getRawButtonPressed(9) && Robot.armSubsystem.hasDisk){
     Robot.armSubsystem.getDisk();
   }
   if(OI.getPlaystation().getRawButtonPressed(7)){
@@ -51,7 +51,7 @@ public class ArmCommand extends Command {
   }else if (OI.getPlaystation().getRawButtonReleased(8)){
     Robot.platformSubsystem.toggleBack();
   }
-  if(OI.getPlaystation().getRawButton(9) && !Robot.armSubsystem.hasDisk){
+  if(OI.getPlaystation().getRawButtonPressed(9) && !Robot.armSubsystem.hasDisk){
     Robot.armSubsystem.putDisk();
   }
 

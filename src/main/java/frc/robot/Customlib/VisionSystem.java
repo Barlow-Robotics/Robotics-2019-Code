@@ -1,6 +1,10 @@
 package frc.robot.Customlib;
 
 import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+import java.util.ArrayList;
+
 import org.opencv.core.RotatedRect;
 
 public class VisionSystem {
@@ -20,7 +24,7 @@ public class VisionSystem {
 
     public VisionSystem() {
         this.lidar = new Lidar(I2C.Port.kOnboard);
-		this.server = new ServerIn(14579);
+		this.server = new ServerIn(14580);
     }
 
 	public class BearingData{
@@ -132,20 +136,31 @@ public class VisionSystem {
 			return new BearingData(false,l.size.height > r.size.height ? -1 : 1); // -1: turn left, 1: turn right
 		}
 
-		return new BearingData(true,server.getLastPacket().centerLine.angle);
+		return new BearingData(true,server.getLastPacket().Alignmentlines[0].angle);
 
 	}
 
 
     public boolean alignmentLineIsVisible() {
-
-		return server.getLastPacket().Alignmentlines.length > 0 ; // tbd
+		//TODO do something else here
+		return getAlignmentRectangle() != null;
 	}
 
-
+	public static final int ALIGNMENT_THRESHOLD = 12; 
+	public static final int ALIGNMENT_OFFSET = -5;
 	public RotatedRect getAlignmentRectangle() {
-		// wpk this needs to be filled in. 
-		return server.getLastPacket().centerLine;
+		// wpk this needs to be filled in.
+		ArrayList<String> calcs = new ArrayList<String>();
+		if(server.getLastPacket() != null)
+		for(RotatedRect rotatedRect : server.getLastPacket().Alignmentlines){
+			
+			if(Math.abs(rotatedRect.center.x - (limeLight.getXOffset()*320/54)) + ALIGNMENT_OFFSET  < ALIGNMENT_THRESHOLD)
+				return rotatedRect;
+			System.out.println("RRC: "+ rotatedRect.center.x + "\t LL XOFF: " + (limeLight.xOffset*320/54));
+				
+		}
+		// SmartDashboard.putStringArray("Calculations",calcs.toArray(String[]::new));
+		return null;
 	}
  
 
