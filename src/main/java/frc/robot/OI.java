@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj.Joystick;
  * interface to the commands and command groups that allow control of the robot.
  */
 public class OI {
-  public static double threshHoldValue = 0.2;
+  public static double threshHoldValue = 0.1;
 	//Playstation Controller Variable
   private static Joystick playstation = new Joystick(RobotMap.Controllers.PLAYSTATION_PORT);
   private static Joystick box = new Joystick(RobotMap.Controllers.BOX_PORT);
@@ -54,6 +54,9 @@ public class OI {
     return -box.getY();
   }
   private static double threshold(double in, double thresh){
-		return Math.abs(in) > thresh ? in : 0;
-	}
+		return Math.abs(in) > thresh ? inputFunction(in) : 0;
+  }
+  private static double inputFunction(double x){
+    return 1.25*(x-0.2); 
+  }
 }

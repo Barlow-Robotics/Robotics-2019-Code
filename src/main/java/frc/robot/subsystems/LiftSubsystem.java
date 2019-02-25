@@ -133,7 +133,7 @@ public class LiftSubsystem extends Subsystem {
         }
       }
       else{
-        liftMotor.set(OI.getBoxY() * .6);
+        liftMotor.set(OI.getBoxY() * .4);
         
       }
         

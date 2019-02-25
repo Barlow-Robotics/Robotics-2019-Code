@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.command.Command;
 import frc.robot.OI;
 import frc.robot.Robot;
 import frc.robot.subsystems.LiftSubsystem;
+import frc.robot.subsystems.LiftSubsystem.CommandEnum;
 
 public class LiftCommand extends Command {
 
@@ -19,15 +20,21 @@ public class LiftCommand extends Command {
     // Use requires() here to declare subsystem dependencies
     requires(Robot.liftSubsystem);
   }
-
+  boolean startLift = true;
   // Called just before this Command runs the first time
   @Override
   protected void initialize() {
+    Robot.liftSubsystem.commandedState = CommandEnum.Middle;
   }
 
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
+    if(startLift && (Robot.liftSubsystem.getLocation() == CommandEnum.Bottom ||
+           Robot.liftSubsystem.getLocation() == CommandEnum.Middle)){
+             Robot.liftSubsystem.commandedState = CommandEnum.Bottom;
+             startLift = false;
+           }
     Robot.liftSubsystem.lift();
     if(OI.getBox().getRawButton(6)) Robot.liftSubsystem.commandedState = LiftSubsystem.CommandEnum.Bottom;
     if(OI.getBox().getRawButton(4)) Robot.liftSubsystem.commandedState = LiftSubsystem.CommandEnum.Middle;

@@ -17,7 +17,7 @@ public class ServerIn{
     private Gson gson = new Gson();
     private AlignmentPacket lastPkt;
 
-    class AlignmentPacket{
+    public class AlignmentPacket{
         public RotatedRect[] Alignmentlines;
         public RotatedRect[] wallRects;
         public double LLBearing,LLRange,lidarDist;

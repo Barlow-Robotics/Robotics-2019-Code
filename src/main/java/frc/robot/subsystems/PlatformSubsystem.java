@@ -8,7 +8,9 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.command.Subsystem;
+import frc.robot.RobotMap;
 import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.Spark;
 
 /**
  * Add your docs here.
@@ -25,14 +27,20 @@ public class PlatformSubsystem extends Subsystem {
 	public static Solenoid closeSolenoidBack = new Solenoid(5);
   public static Solenoid openSolenoidFront = new Solenoid(6);
   public static Solenoid closeSolenoidFront = new Solenoid(7);
+  public static Spark habitatMotor = new Spark(RobotMap.PWM.PLATFORM_MOTOR_PORT);
+
   public static boolean openBack = false;
   public static boolean openFront = false;
   @Override
   public void initDefaultCommand() {
+    
   }
   public void toggleFront(){
     openFront = !openFront;
     updateFrontSolenoids();
+  }
+  public void drive(double speed){
+    habitatMotor.set(speed);
   }
   public void toggleBack(){
     openBack = !openBack;

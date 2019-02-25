@@ -28,32 +28,25 @@ public class ArmCommand extends Command {
   @Override
   protected void execute() {
     
-  if(OI.getPlaystation().getRawButton(4)){
-        Robot.armSubsystem.openClaw();
-    }else{
-        Robot.armSubsystem.closeClaw();
-    }
-    if(OI.getPlaystation().getRawButton(5)){
-      Robot.armSubsystem.openExtend();
-  }else{
-      Robot.armSubsystem.closeExtend();
+  if(OI.getBox().getRawButtonPressed(1)){
+    Robot.armSubsystem.toggleClaw();
   }
-  if(OI.getPlaystation().getRawButtonPressed(9) && Robot.armSubsystem.hasDisk){
-    Robot.armSubsystem.getDisk();
+  if(OI.getBox().getRawButtonPressed(2)){
+    Robot.armSubsystem.toggleExtend();
   }
-  if(OI.getPlaystation().getRawButtonPressed(7)){
-    Robot.platformSubsystem.toggleFront();
-  }else if (OI.getPlaystation().getRawButtonReleased(7)){
-    Robot.platformSubsystem.toggleFront();
-  }
-  if(OI.getPlaystation().getRawButtonPressed(8)){
-    Robot.platformSubsystem.toggleBack();
-  }else if (OI.getPlaystation().getRawButtonReleased(8)){
+  // else if(OI.getBox().getRawButtonReleased(2)){
+  //   Robot.armSubsystem.toggleExtend();
+  // }
+
+  if(OI.getPlaystation().getRawButtonReleased(8)){
     Robot.platformSubsystem.toggleBack();
   }
-  if(OI.getPlaystation().getRawButtonPressed(9) && !Robot.armSubsystem.hasDisk){
-    Robot.armSubsystem.putDisk();
+  if(OI.getPlaystation().getRawButtonReleased(7)){
+    Robot.platformSubsystem.toggleFront();
   }
+
+  if(OI.getPlaystation().getRawButton(2))
+    Robot.platformSubsystem.drive(0.3);
 
   }
   

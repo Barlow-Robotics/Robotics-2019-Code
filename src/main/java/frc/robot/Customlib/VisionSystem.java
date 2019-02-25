@@ -20,7 +20,7 @@ public class VisionSystem {
     // private String alignmentNetTableName ;
     private Lidar lidar;
 	public LimeLight limeLight = new LimeLight();
-	private ServerIn server;
+	public ServerIn server;
 
     public VisionSystem() {
         this.lidar = new Lidar(I2C.Port.kOnboard);
@@ -120,7 +120,8 @@ public class VisionSystem {
 		// distance called out in the game book.
 
 
-		
+		if(server.getLastPacket() == null)
+			return new BearingData(false, 0);
 		if(limeLight.getHasTarget()){
 			return new BearingData(true,limeLight.getCamTranslation().rotation.y);
 		}
@@ -150,20 +151,29 @@ public class VisionSystem {
 	}
 
 	public static final int ALIGNMENT_THRESHOLD = 12; 
-	public static final int ALIGNMENT_OFFSET = -5;
+	public static int ALIGNMENT_OFFSET = 33;
 	public RotatedRect getAlignmentRectangle() {
+		ALIGNMENT_OFFSET = (int)SmartDashboard.getNumber("Alignment offset", ALIGNMENT_OFFSET);
+		SmartDashboard.putNumber("Alignment offset", ALIGNMENT_OFFSET);
 		// wpk this needs to be filled in.
 		ArrayList<String> calcs = new ArrayList<String>();
-		if(server.getLastPacket() != null)
+		
+		if(server.getLastPacket() == null || server.getLastPacket().Alignmentlines.length == 0)
+			return null;
+		
+		RotatedRect closest = server.getLastPacket().Alignmentlines[0];
+
 		for(RotatedRect rotatedRect : server.getLastPacket().Alignmentlines){
 			
-			if(Math.abs(rotatedRect.center.x - (limeLight.getXOffset()*320/54)) + ALIGNMENT_OFFSET  < ALIGNMENT_THRESHOLD)
-				return rotatedRect;
+			if(Math.abs(rotatedRect.center.x - (limeLight.getXOffset()*320/54-ALIGNMENT_OFFSET)+320/2) <
+				Math.abs(closest.center.x - (limeLight.getXOffset()*320/54-ALIGNMENT_OFFSET)+320/2))
+			closest = rotatedRect;
+		
 			// System.out.println("RRC: "+ rotatedRect.center.x + "\t LL XOFF: " + (limeLight.xOffset*320/54));
 				
 		}
 		// SmartDashboard.putStringArray("Calculations",calcs.toArray(String[]::new));
-		return null;
+		return closest;
 	}
  
 

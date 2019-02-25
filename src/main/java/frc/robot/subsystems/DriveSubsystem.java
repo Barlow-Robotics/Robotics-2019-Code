@@ -4,6 +4,7 @@ import frc.robot.OI;
 import frc.robot.Robot;
 import frc.robot.RobotMap;
 import frc.robot.Customlib.*;
+import frc.robot.Customlib.LimeLight.Target3D;
 import frc.robot.commands.DriveCommand;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
@@ -36,7 +37,7 @@ public class DriveSubsystem extends Subsystem {
 	private final double DEBUG_MULTIPLIER = 0.3;
 	// This constant represents the reading from the distance sensor that indicates the
 	// bot is close enough to the target and we don't need to move any closer.
-	private final int CLOSE_ENOUGH = 5 ; // wpk - place holder value for now
+	private final int CLOSE_ENOUGH = -3 ; // wpk - place holder value for now
 
 	// Distance where we really want to start slowing down
 	private final int ALMOST_THERE = 10 ; // wpk - place holder value for now
@@ -44,17 +45,18 @@ public class DriveSubsystem extends Subsystem {
 	private final double FINAL_APPROACH_SPEED_FACTOR = 0.25 ; // wpk - place holder value for now
 
 	// Distance at which we will start our approach
-	private final double APPROACH_DISTANCE = 20.0 ; // wpk - place holder value for now
+	private final double APPROACH_DISTANCE = 30.0 ; // wpk - place holder value for now
 	// Speed we will use for start of our approach
 	private final double APPROACH_SPEED_FACTOR = 0.5 ; // wpk - place holder value for now
+
 
 	// Speed when outside approach distance
 	private final double FULL_SPEED_FACTOR = 1.0 ;
 
 	// Tolerence around centering bot to alignment line
 	private final double ALIGNMENT_LINE_LATERAL_TOLERANCE = 10.0 ;  // wpk - need to figure out what a good value is.
-	private final double ALIGNMENT_LINE_ANGULAR_TOLERANCE = 2.0 ; // wpk - need to figure out what a good value is
-	private final double ALIGNMENT_ROTATION_SPEED = 0.1 ; // wpk - need to figure out what a good value is
+	private final double ALIGNMENT_LINE_ANGULAR_TOLERANCE = 6.0 ; // wpk - need to figure out what a good value is
+	private final double ALIGNMENT_ROTATION_SPEED = 0.2 ; // wpk - need to figure out what a good value is
 
 	// These are the proportional, integral, and derivative coefficients used in the
 	// PID control.
@@ -212,7 +214,7 @@ public class DriveSubsystem extends Subsystem {
 	// wpk - not sure who callls this, but it would be in response to the operator pressing
 	// the auto button.
 
-	
+	public double startBearing;
 	public void SetModeAutoApproach() {
 
 		if ( isAutoAvailable() ) {
@@ -222,7 +224,7 @@ public class DriveSubsystem extends Subsystem {
 			 
 			startingHeading = nav.getAngle() ;
 			double bearing = visionSystem.bearingToTarget().angle;  // wpk need to make sure this is the right function to call
-
+			startBearing = bearing;
             double bearingInRadians = Math.toRadians(bearing);
 
 			double distanceToTarget = visionSystem.distanceToTarget() ;
@@ -304,10 +306,12 @@ public class DriveSubsystem extends Subsystem {
 		SmartDashboard.putNumber("KD", KD);
 		SmartDashboard.putBoolean("HEffect_F",Robot.liftSubsystem.HES_F.get());
 		SmartDashboard.putBoolean("HEffect_B",Robot.liftSubsystem.HES_B.get());
-
+		SmartDashboard.putNumber("LIDAR: ", visionSystem.server.getLastPacket().lidarDist);
 		if(driveMode == null) driveMode = DriveMode.Manual;
 		VisionSystem.BearingData b = visionSystem.bearingToTarget();
 		SmartDashboard.putNumber("Bearing",b.angle);
+
+
         switch ( driveMode ) {
 			
 			case Manual :
@@ -317,14 +321,51 @@ public class DriveSubsystem extends Subsystem {
 				   // joystick inputs?
 				// wpk this line commented out to allow compile. 
 				// robotDrive.drive(OI.getPlaystation());
-				robotDrive.driveCartesian( OI.getThreshedPSX() , -OI.getThreshedPSY(), OI.getThreshedPSZ());
+				boolean auto = OI.getPlaystation().getRawButton(3);
+				double xSpeed = OI.getThreshedPSX();
+				double zSpeed = OI.getThreshedPSZ();
+				Target3D targ = visionSystem.limeLight.getCamTranslation();
+				double yRotation = visionSystem.limeLight.getXOffset();
+				if(auto){
+					if(!visionSystem.limeLight.getHasTarget()){
+						//TODO alignment line code
+						xSpeed = 0;
+						zSpeed = 0;
+						// if(visionSystem.getAlignmentRectangle() == null) break;
+						// Point[] points = new Point[4];
+					
+						// visionSystem.getAlignmentRectangle().points(points);
+						// RotatedRect aL = visionSystem.getAlignmentRectangle();
+						// double aLX = aL.center.x;
+						// double aLRot = points[1].y < points[3].y ? aL.angle : 90 + aL.angle;
+						// if(Math.abs(aLX) > 0.3){
+						// 	xSpeed = 0.2*aLX/Math.abs(aLX);
+						// }
+						
+						// if(Math.abs(aLRot) > 0.3){
+						// 	zSpeed = 0.2*aLRot/Math.abs(aLRot);
+						// }
+
+					}else{
+						if(Math.abs(yRotation) >= ALIGNMENT_LINE_ANGULAR_TOLERANCE){
+							zSpeed = ALIGNMENT_ROTATION_SPEED*yRotation/Math.abs(yRotation);
+						}else{
+							zSpeed = 0;
+						}
+						if(Math.abs(targ.translation.x) > 2){
+							xSpeed = -0.3*targ.translation.x/Math.abs(targ.translation.x);
+						}else{
+							xSpeed = 0;
+						}
+					}
+				}
+				robotDrive.driveCartesian(xSpeed, visionSystem.server.getLastPacket().lidarDist > 4 ? -OI.getThreshedPSY(), zSpeed);
 			    break ;
 
 			case Positioning :
 
                 if ( isInPosition() ) {
 					driveMode = DriveMode.Approaching ;
-					System.out.println("Switching to approach mode");
 				} else {
 					// need to compute angle from front of bot to target so that we can make sure the
 					// target is centered in the limelight view.
@@ -343,14 +384,17 @@ public class DriveSubsystem extends Subsystem {
 					// Once this angle is computed, the desired track will be updated so that the bot
 					// will move along the desired track after rotating the bot to center the target in the
 					// limelight field of view (FOV)
-					desiredTrackAngle += startingHeading - nav.getAngle();  // should this be add or subtract?
+					//desiredTrackAngle += startingHeading - nav.getAngle();  // should this be add or subtract?
 
+					double deltaTrack = desiredTrackAngle + startingHeading-nav.getAngle() ;
 					// wpk - need to think about the above line. Worried that its going to sum the change frame to frame
 					// which is not what we want. May need to record angle from nav x at start?
-
-					robotDrive.driveCartesian(-0.3, 0.0*DEBUG_MULTIPLIER,
-					 0, //TODO add this in
-					  desiredTrackAngle) ;
+					double zRotation = Math.abs(visionSystem.limeLight.getXOffset()) > 1 ?
+						 visionSystem.limeLight.xOffset/Math.abs(visionSystem.limeLight.xOffset)*0.1 : 0;
+					robotDrive.driveCartesian(0.0, 1.0*DEBUG_MULTIPLIER,
+					 zRotation, //TODO add this in
+					 //90.0) ;
+					 deltaTrack) ;
 			    }
 			    break ;
 
@@ -372,31 +416,37 @@ public class DriveSubsystem extends Subsystem {
 
 					// wpk - some of this code doesn't yet exist and will need to be created
 					RotatedRect alignmentLineRectangle = visionSystem.getAlignmentRectangle() ;
-
+					double distanceFromCenter = 0;
+					
+					if(alignmentLineRectangle == null){
+						driveMode = DriveMode.Manual;
+						return;
+					} 
 					// need to fill in the calculation that computes the X distance from the center of the line
 					// to the center line of the screen.
-					double distanceFromCenter = 0.0 ; // tbd 
-					double angleOfAlignmentLine = 0.0 ; // tbd
+					distanceFromCenter = alignmentLineRectangle.center.x - 320/2 + 33; // tbd
+					SmartDashboard.putNumber("Target Dist From Center",distanceFromCenter);
 
-					double xSpeed = 0.0 ;
+					Point[] points = new Point[4];
+					
+					alignmentLineRectangle.points(points); 
+					double angleOfAlignmentLine = points[1].y < points[3].y ?
+						alignmentLineRectangle.angle : 90 + alignmentLineRectangle.angle;
+					
+					// double xSpeed = 0.0 ;
 					double ySpeed = 0.0 ;
-					double zRotation = 0.0 ;
-
+					double zRotation = 0.1 * (Math.abs(angleOfAlignmentLine) > ALIGNMENT_LINE_ANGULAR_TOLERANCE ?
+						angleOfAlignmentLine/Math.abs(angleOfAlignmentLine) : 0);
 					if ( Math.abs(distanceFromCenter) > ALIGNMENT_LINE_LATERAL_TOLERANCE) {
 						// The bot needs to be moved left or right
-						xSpeed = 0.0 ; // wpk tbd - need to figure out speed based on distance from line
 						// fix the sign of the speed command so we go the right direction
-						xSpeed = xSpeed * (distanceFromCenter/Math.abs(distanceFromCenter)) ;
-					} else {
-						// the bot is close enough to the alignment line, so lets make sure its pointing at the target
-						if ( Math.abs( angleOfAlignmentLine ) > ALIGNMENT_LINE_ANGULAR_TOLERANCE ) {
-							zRotation = ALIGNMENT_ROTATION_SPEED * (distanceFromCenter/Math.abs(distanceFromCenter)) ;
-						}
+						xSpeed = 0.1 * (-distanceFromCenter/Math.abs(distanceFromCenter)) ;
 					}
+					ySpeed = approachSpeedFactorToTarget();
+					// System.out.println("zRotation: " + zRotation + " xSpeed: " + xSpeed + " distance: " + distanceFromCenter + " angle: " + angleOfAlignmentLine);
 
-					ySpeed = approachSpeedFactorToTarget() ;
 					robotDrive.driveCartesian(0,0,0,0);
-					//robotDrive.driveCartesian( ySpeed, xSpeed, zRotation, 0.0 ) ;
+					// robotDrive.driveCartesian( xSpeed, 0, zRotation) ;
 
 				}
 			    break ;
