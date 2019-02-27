@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import java.net.ServerSocket;
 import edu.wpi.first.wpilibj.Spark;
+import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import com.kauailabs.navx.frc.AHRS;
@@ -33,7 +34,7 @@ public class DriveSubsystem extends Subsystem {
 	// reduction in motor speed when the battery starts to run down, as well as the
 	// fact that the PID controller may add some gain beyond the set point if the motor needs
 	// to "catch up" to the set value.
-	private final double MAX_ENCODER = 10000.0;
+	private final double MAX_ENCODER = 1000.0;
 	private final double DEBUG_MULTIPLIER = 0.3;
 	// This constant represents the reading from the distance sensor that indicates the
 	// bot is close enough to the target and we don't need to move any closer.
@@ -56,7 +57,7 @@ public class DriveSubsystem extends Subsystem {
 	// Tolerence around centering bot to alignment line
 	private final double ALIGNMENT_LINE_LATERAL_TOLERANCE = 10.0 ;  // wpk - need to figure out what a good value is.
 	private final double ALIGNMENT_LINE_ANGULAR_TOLERANCE = 6.0 ; // wpk - need to figure out what a good value is
-	private final double ALIGNMENT_ROTATION_SPEED = 0.2 ; // wpk - need to figure out what a good value is
+	private final double ALIGNMENT_ROTATION_SPEED = 0.1 ; // wpk - need to figure out what a good value is
 
 	// These are the proportional, integral, and derivative coefficients used in the
 	// PID control.
@@ -75,10 +76,10 @@ public class DriveSubsystem extends Subsystem {
 	////////////////////
 
 	// Speed Controllers for the motors
-	private Spark frontLeftMotor; // = new Spark(RobotMap.PWM.FRONT_LEFT_MOTOR_PORT);
-	private Spark frontRightMotor; // = new Spark(RobotMap.PWM.FRONT_RIGHT_MOTOR_PORT);
-	private Spark backLeftMotor; // = new Spark(RobotMap.PWM.BACK_LEFT_MOTOR_PORT);
-	private Spark backRightMotor; // = new Spark(RobotMap.PWM.BACK_RIGHT_MOTOR_PORT);
+	private VictorSP frontLeftMotor; // = new Spark(RobotMap.PWM.FRONT_LEFT_MOTOR_PORT);
+	private VictorSP frontRightMotor; // = new Spark(RobotMap.PWM.FRONT_RIGHT_MOTOR_PORT);
+	private VictorSP backLeftMotor; // = new Spark(RobotMap.PWM.BACK_LEFT_MOTOR_PORT);
+	private VictorSP backRightMotor; // = new Spark(RobotMap.PWM.BACK_RIGHT_MOTOR_PORT);
 
 	// Encoders for each wheel
 	private Encoder frontLeftEncoder;
@@ -140,10 +141,10 @@ public class DriveSubsystem extends Subsystem {
 	
 	public DriveSubsystem() {
 
-		frontLeftMotor = new Spark(RobotMap.PWM.FRONT_LEFT_MOTOR_PORT);
-		frontRightMotor = new Spark(RobotMap.PWM.FRONT_RIGHT_MOTOR_PORT);
-		backLeftMotor = new Spark(RobotMap.PWM.BACK_LEFT_MOTOR_PORT);
-		backRightMotor = new Spark(RobotMap.PWM.BACK_RIGHT_MOTOR_PORT);
+		frontLeftMotor = new VictorSP(RobotMap.PWM.FRONT_LEFT_MOTOR_PORT);
+		frontRightMotor = new VictorSP(RobotMap.PWM.FRONT_RIGHT_MOTOR_PORT);
+		backLeftMotor = new VictorSP(RobotMap.PWM.BACK_LEFT_MOTOR_PORT);
+		backRightMotor = new VictorSP(RobotMap.PWM.BACK_RIGHT_MOTOR_PORT);
 
 		frontLeftMotor.setName("frontLeftMotor");
 		frontRightMotor.setName("frontRightMotor");
@@ -155,6 +156,18 @@ public class DriveSubsystem extends Subsystem {
 		frontRightEncoder = new Encoder(RobotMap.DIO.frontRightEncoderPorts[0], RobotMap.DIO.frontRightEncoderPorts[1]);
 		backLeftEncoder = new Encoder(RobotMap.DIO.backLeftEncoderPorts[0], RobotMap.DIO.backLeftEncoderPorts[1]); 
 		backRightEncoder = new Encoder(RobotMap.DIO.backRightEncoderPorts[0], RobotMap.DIO.backRightEncoderPorts[1]); 
+		frontLeftEncoder.reset();
+		frontLeftEncoder.setName("FL encoder");
+
+		frontRightEncoder.reset();
+		frontRightEncoder.setName("FR encoder");
+		
+		backLeftEncoder.reset();
+		backLeftEncoder.setName("BL encoder");
+
+		backRightEncoder.reset();
+		backRightEncoder.setName("BR encoder");
+
 		// frontRightEncoder.setReverseDirection(true);
 		// backRightEncoder.setReverseDirection(true);
 
@@ -297,6 +310,10 @@ public class DriveSubsystem extends Subsystem {
 		SmartDashboard.putBoolean("AutoEnabled", isAutoAvailable());
 		SmartDashboard.putNumber("NavAngle",nav.getAngle());
 		SmartDashboard.putString("Drive mode", driveMode.name());
+		System.out.println("frontLeftEncoder" + frontLeftEncoder.getRate());
+		System.out.println("frontRightEncoder"+ frontRightEncoder.getRate());
+		System.out.println("backRightEncoder"+ backRightEncoder.getRate());
+		System.out.println("backLeftEncoder"+ backLeftEncoder.getRate());
 		SmartDashboard.putString("frontLeftEncoder", frontLeftEncoder.getRate()+"");
 		SmartDashboard.putString("frontRightEncoder", frontRightEncoder.getRate()+"");
 		SmartDashboard.putString("backRightEncoder", backRightEncoder.getRate()+"");
@@ -304,8 +321,6 @@ public class DriveSubsystem extends Subsystem {
 		SmartDashboard.putNumber("KP", KP);
 		SmartDashboard.putNumber("KI", KI);
 		SmartDashboard.putNumber("KD", KD);
-		SmartDashboard.putBoolean("HEffect_F",Robot.liftSubsystem.HES_F.get());
-		SmartDashboard.putBoolean("HEffect_B",Robot.liftSubsystem.HES_B.get());
 		SmartDashboard.putNumber("LIDAR: ", visionSystem.server.getLastPacket().lidarDist);
 		if(driveMode == null) driveMode = DriveMode.Manual;
 		VisionSystem.BearingData b = visionSystem.bearingToTarget();
@@ -359,7 +374,7 @@ public class DriveSubsystem extends Subsystem {
 						}
 					}
 				}
-				robotDrive.driveCartesian(xSpeed, visionSystem.server.getLastPacket().lidarDist > 4 ? -OI.getThreshedPSY(), zSpeed);
+				robotDrive.driveCartesian(xSpeed, visionSystem.server.getLastPacket().lidarDist > 4 ? -OI.getThreshedPSY() : 0, zSpeed);
 			    break ;
 
 			case Positioning :

@@ -34,6 +34,8 @@ public class ServerIn{
 
 
     public ServerIn(int port){
+        
+        lastPkt = new AlignmentPacket(new RotatedRect[0], new RotatedRect[0], 0, 0, 10, 0);
         try {
             socket = new DatagramSocket(port);
             socket.setSoTimeout(1);
