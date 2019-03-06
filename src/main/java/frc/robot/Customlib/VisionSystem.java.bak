@@ -27,14 +27,21 @@ public class VisionSystem {
 		this.server = new ServerIn(14580);
     }
 
+	public class BearingData{
+		public boolean exactAngle = false;
+		public double angle = 0;
+		public BearingData(boolean exactAngle, double angle){
+			this.exactAngle = exactAngle;
+			this.angle = angle;
+		}
+	}
+
     public boolean targetIsPresent() {
-        return limeLight.getHasTarget();
+        return limeLight.hasTarget;
     }
 
     public void updateVision(){
-		server.updateAlignmentData();
-		SmartDashboard.putNumber("VS Bearing", this.bearingToTarget()) ;
-		SmartDashboard.putNumber("VS Distance to Target", this.distanceToTarget());
+    	server.updateAlignmentData();
 
 	}
 	// The tolerence of bearing to target at which we consider it safe to look at
@@ -70,29 +77,34 @@ public class VisionSystem {
 		// on target center,
 		// the lidar may provide the best estimate of range
 
-		double result = Double.MAX_VALUE;
-		double lidarDistance = server.getLastPacket().lidarDist; // wpk to-do need to fetch lidar value
-		LimeLight.Target3D target = limeLight.getAveragedCamTranslation();
-		SmartDashboard.putNumber("Average Translation", target.translation.x);
-		double x = target.translation.x;
-		double z = target.translation.y;
-    	if (targetIsPresent()) {
+		double result = 0.0;
+		double lidarDistance = lidar.getDistace(); // wpk to-do need to fetch lidar value
+		if (targetIsPresent()) {
+			LimeLight.Target3D target = limeLight.getCamTranslation();
+			double x = target.translation.x;
+			double z = target.translation.z;
 			result = Math.sqrt((x*x)+(z*z));
-			double angle = bearingToTarget();
-			if (result < LIDAR_DISTANCE_THRESHOLD && Math.abs(angle) < LIDAR_BEARING_TOLERANCE) {
+			BearingData b = bearingToTarget();
+			if (result < LIDAR_DISTANCE_THRESHOLD && b.exactAngle && Math.abs(b.angle) < LIDAR_BEARING_TOLERANCE) {
 				if (Math.abs(result - lidarDistance) < LIDAR_VISUAL_COMPARE_TOLERANCE) {
 					result = lidarDistance;
 				}
 			}
+		} else {
+			// we can't see the target lines, so look at the alignment line
+			if (alignmentLineIsVisible()) {
+				BearingData b = bearingToTarget();
+				if (Math.abs(b.angle) < LIDAR_BEARING_TOLERANCE) {
+					result = lidarDistance;
+				}
+			}
 		}
-		SmartDashboard.putNumber("Lidar Distance", lidarDistance) ;
-		SmartDashboard.putNumber("LL Distance", Math.sqrt((x*x)+(z*z)));
 
 		return result;
 	}
 
 
-	public double bearingToTarget() {
+	public BearingData bearingToTarget() {
 		// wpk need to put estimation algiorithm here
 
 		// Some thoughts are:
@@ -108,44 +120,61 @@ public class VisionSystem {
 		// distance called out in the game book.
 
 
+		if(server.getLastPacket() == null)
+			return new BearingData(false, 0);
 		if(limeLight.getHasTarget()){
-			return limeLight.getCamTranslation().rotation.y;
+			return new BearingData(true,limeLight.getCamTranslation().rotation.y);
 		}
-		return 0;
+			if(server.getLastPacket().Alignmentlines.length == 0){
+			//Use the wall rectangle to find bearing
+
+			if(server.getLastPacket().wallRects.length < 2 ) return new BearingData(false,0);
+
+			RotatedRect l = server.getLastPacket().wallRects[0],r = server.getLastPacket().wallRects[0];
+
+			for(RotatedRect rotatedRect : server.getLastPacket().wallRects){
+				if(l.center.x > rotatedRect.center.x) l = rotatedRect;
+				if(r.center.x < rotatedRect.center.x) r = rotatedRect;
+			}
+
+			return new BearingData(false,l.size.height > r.size.height ? -1 : 1); // -1: turn left, 1: turn right
+		}
+
+		return new BearingData(false,0);
 
 	}
 
 
-    // public boolean alignmentLineIsVisible() {
-	// 	//TODO do something else here
-	// 	return getAlignmentRectangle() != null;
-	// }
+    public boolean alignmentLineIsVisible() {
+		//TODO do something else here
+		return getAlignmentRectangle() != null;
+	}
 
-	// public static final int ALIGNMENT_THRESHOLD = 12; 
-	// public static int ALIGNMENT_OFFSET = 33;
-	// public RotatedRect getAlignmentRectangle() {
-	// 	ALIGNMENT_OFFSET = (int)SmartDashboard.getNumber("Alignment offset", ALIGNMENT_OFFSET);
-	// 	SmartDashboard.putNumber("Alignment offset", ALIGNMENT_OFFSET);
-	// 	// wpk this needs to be filled in.
-	// 	ArrayList<String> calcs = new ArrayList<String>();
+	public static final int ALIGNMENT_THRESHOLD = 12; 
+	public static int ALIGNMENT_OFFSET = 33;
+	public RotatedRect getAlignmentRectangle() {
+		ALIGNMENT_OFFSET = (int)SmartDashboard.getNumber("Alignment offset", ALIGNMENT_OFFSET);
+		SmartDashboard.putNumber("Alignment offset", ALIGNMENT_OFFSET);
+		// wpk this needs to be filled in.
+		ArrayList<String> calcs = new ArrayList<String>();
 		
-	// 	if(server.getLastPacket() == null || server.getLastPacket().Alignmentlines.length == 0)
-	// 		return null;
+		if(server.getLastPacket() == null || server.getLastPacket().Alignmentlines.length == 0)
+			return null;
 		
-	// 	RotatedRect closest = server.getLastPacket().Alignmentlines[0];
+		RotatedRect closest = server.getLastPacket().Alignmentlines[0];
 
-	// 	for(RotatedRect rotatedRect : server.getLastPacket().Alignmentlines){
+		for(RotatedRect rotatedRect : server.getLastPacket().Alignmentlines){
 			
-	// 		if(Math.abs(rotatedRect.center.x - (limeLight.getXOffset()*320/54-ALIGNMENT_OFFSET)+320/2) <
-	// 			Math.abs(closest.center.x - (limeLight.getXOffset()*320/54-ALIGNMENT_OFFSET)+320/2))
-	// 		closest = rotatedRect;
+			if(Math.abs(rotatedRect.center.x - (limeLight.getXOffset()*320/54-ALIGNMENT_OFFSET)+320/2) <
+				Math.abs(closest.center.x - (limeLight.getXOffset()*320/54-ALIGNMENT_OFFSET)+320/2))
+			closest = rotatedRect;
 		
-	// 		// System.out.println("RRC: "+ rotatedRect.center.x + "\t LL XOFF: " + (limeLight.xOffset*320/54));
+			// System.out.println("RRC: "+ rotatedRect.center.x + "\t LL XOFF: " + (limeLight.xOffset*320/54));
 				
-	// 	}
-	// 	// SmartDashboard.putStringArray("Calculations",calcs.toArray(String[]::new));
-	// 	return closest;
-	// }
+		}
+		// SmartDashboard.putStringArray("Calculations",calcs.toArray(String[]::new));
+		return closest;
+	}
  
 
 

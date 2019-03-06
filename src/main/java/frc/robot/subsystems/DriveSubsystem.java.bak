@@ -155,22 +155,8 @@ public class DriveSubsystem extends Subsystem {
 		frontRightEncoder = new Encoder(RobotMap.DIO.frontRightEncoderPorts[0], RobotMap.DIO.frontRightEncoderPorts[1]);
 		backLeftEncoder = new Encoder(RobotMap.DIO.backLeftEncoderPorts[0], RobotMap.DIO.backLeftEncoderPorts[1]); 
 		backRightEncoder = new Encoder(RobotMap.DIO.backRightEncoderPorts[0], RobotMap.DIO.backRightEncoderPorts[1]); 
-		frontLeftEncoder.reset();
-		frontLeftEncoder.setName("FL encoder");
-
-		frontRightEncoder.reset();
-		frontRightEncoder.setName("FR encoder");
-		
-		backLeftEncoder.reset();
-		backLeftEncoder.setName("BL encoder");
-
-		backRightEncoder.reset();
-		backRightEncoder.setName("BR encoder");
-
-//		frontRightEncoder.setReverseDirection(true);
-//		backRightEncoder.setReverseDirection(true);
-//		frontLeftEncoder.setReverseDirection(true);
-//		backLeftEncoder.setReverseDirection(true);
+		// frontRightEncoder.setReverseDirection(true);
+		// backRightEncoder.setReverseDirection(true);
 
 		frontLeftSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, frontLeftEncoder, frontLeftMotor, 14572);
 		frontRightSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, frontRightEncoder, frontRightMotor,14573);
@@ -205,12 +191,13 @@ public class DriveSubsystem extends Subsystem {
 		// If this is the only place you would ever want that, you could put it here. If you might want to
 		// that from other classes (e.g., cueing the operator), consider putting it in the limelight class 
 		// so its accessible elsewhere.
+		boolean aLVisible = visionSystem.alignmentLineIsVisible();
 		boolean hasTarget = visionSystem.limeLight.getHasTarget();
 		double dist = visionSystem.distanceToTarget();
-
+		SmartDashboard.putBoolean("aLVisible", aLVisible);
 		SmartDashboard.putBoolean("hasTarget", hasTarget);
 		SmartDashboard.putNumber("Targ Dist", dist);
-		return (dist > TOO_CLOSE) && hasTarget; // TBD
+		return (aLVisible && dist < TOO_CLOSE) || hasTarget; // TBD
 	}
 
 	
@@ -235,20 +222,20 @@ public class DriveSubsystem extends Subsystem {
 			// the target
 
 			 
-			// startingHeading = nav.getAngle() ;
-			// double bearing = visionSystem.bearingToTarget();  // wpk need to make sure this is the right function to call
-			// startBearing = bearing;
-            // double bearingInRadians = Math.toRadians(bearing);
+			startingHeading = nav.getAngle() ;
+			double bearing = visionSystem.bearingToTarget().angle;  // wpk need to make sure this is the right function to call
+			startBearing = bearing;
+            double bearingInRadians = Math.toRadians(bearing);
 
-			// double distanceToTarget = visionSystem.distanceToTarget() ;
-			// double distanceToApproach 
-			//    = Math.sqrt(distanceToTarget*distanceToTarget
-			// 			   + APPROACH_DISTANCE*APPROACH_DISTANCE
-			// 			   - 2.0*APPROACH_DISTANCE*visionSystem.distanceToTarget()*Math.cos(bearingInRadians)) ;
+			double distanceToTarget = visionSystem.distanceToTarget() ;
+			double distanceToApproach 
+			   = Math.sqrt(distanceToTarget*distanceToTarget
+						   + APPROACH_DISTANCE*APPROACH_DISTANCE
+						   - 2.0*APPROACH_DISTANCE*visionSystem.distanceToTarget()*Math.cos(bearingInRadians)) ;
 			
 
 
-			// desiredTrackAngle = Math.toDegrees(Math.asin(APPROACH_DISTANCE*Math.sin(bearingInRadians)/distanceToApproach) );
+			desiredTrackAngle = Math.toDegrees(Math.asin(APPROACH_DISTANCE*Math.sin(bearingInRadians)/distanceToApproach) );
 
 			driveMode = DriveMode.Positioning ;
 		}
@@ -273,9 +260,13 @@ public class DriveSubsystem extends Subsystem {
 
 	private boolean isInPosition() {
 		// need to determine if we are close enough to the target and are aligned with it.
-		Target3D targ = visionSystem.limeLight.getCamTranslation();
+
 		// I recommend an approach such as :
-		return visionSystem.distanceToTarget() <= APPROACH_DISTANCE && targ.translation.x <= ALIGNMENT_LATERAL_TOLERANCE );
+		if ( visionSystem.distanceToTarget() <= APPROACH_DISTANCE && visionSystem.alignmentLineIsVisible() ) {
+			return true ;
+		} else {
+			return false ;
+		}
 	}
 
 
@@ -302,15 +293,10 @@ public class DriveSubsystem extends Subsystem {
 
 	// Need to understand where this can be called from. Maybe command?
 	public void doDriving() {
-		ALIGNMENT_LATERAL_TOLERANCE = (visionSystem.distanceToTarget() < 72) ? visionSystem.distanceToTarget()*ALIGNMENT_TOLERANCE_P : 15;
 		visionSystem.updateVision();
 		SmartDashboard.putBoolean("AutoEnabled", isAutoAvailable());
 		SmartDashboard.putNumber("NavAngle",nav.getAngle());
 		SmartDashboard.putString("Drive mode", driveMode.name());
-		// System.out.println("frontLeftEncoder" + frontLeftEncoder.getRate());
-		// System.out.println("frontRightEncoder"+ frontRightEncoder.getRate());
-		// System.out.println("backRightEncoder"+ backRightEncoder.getRate());
-		// System.out.println("backLeftEncoder"+ backLeftEncoder.getRate());
 		SmartDashboard.putString("frontLeftEncoder", frontLeftEncoder.getRate()+"");
 		SmartDashboard.putString("frontRightEncoder", frontRightEncoder.getRate()+"");
 		SmartDashboard.putString("backRightEncoder", backRightEncoder.getRate()+"");
@@ -318,18 +304,12 @@ public class DriveSubsystem extends Subsystem {
 		SmartDashboard.putNumber("KP", KP);
 		SmartDashboard.putNumber("KI", KI);
 		SmartDashboard.putNumber("KD", KD);
+		SmartDashboard.putBoolean("HEffect_F",Robot.liftSubsystem.HES_F.get());
+		SmartDashboard.putBoolean("HEffect_B",Robot.liftSubsystem.HES_B.get());
 		SmartDashboard.putNumber("LIDAR: ", visionSystem.server.getLastPacket().lidarDist);
-
-		SmartDashboard.putNumber("FL Motor", frontLeftMotor.get());
-		SmartDashboard.putNumber("FR Motor", frontRightMotor.get());
-		SmartDashboard.putNumber("BL Motor", backLeftMotor.get());
-		SmartDashboard.putNumber("BR Motor", backRightMotor.get());
-
-
 		if(driveMode == null) driveMode = DriveMode.Manual;
-		double b = visionSystem.bearingToTarget();
-		SmartDashboard.putNumber("Bearing",b);
-		double ySpeed = 0.0 ;
+		VisionSystem.BearingData b = visionSystem.bearingToTarget();
+		SmartDashboard.putNumber("Bearing",b.angle);
 
 
         switch ( driveMode ) {
@@ -343,52 +323,49 @@ public class DriveSubsystem extends Subsystem {
 				// robotDrive.drive(OI.getPlaystation());
 				boolean auto = OI.getPlaystation().getRawButton(3);
 				double xSpeed = OI.getThreshedPSX();
-				double zSpeed = DEBUG_MULTIPLIER * OI.getThreshedPSZ();
+				double zSpeed = OI.getThreshedPSZ();
 				Target3D targ = visionSystem.limeLight.getCamTranslation();
 				double yRotation = visionSystem.limeLight.getXOffset();
-				if(!visionSystem.limeLight.getHasTarget())
-					auto = false;
 				if(auto){
 					if(!visionSystem.limeLight.getHasTarget()){
 						//TODO alignment line code
 						xSpeed = 0;
 						zSpeed = 0;
+						// if(visionSystem.getAlignmentRectangle() == null) break;
+						// Point[] points = new Point[4];
+					
+						// visionSystem.getAlignmentRectangle().points(points);
+						// RotatedRect aL = visionSystem.getAlignmentRectangle();
+						// double aLX = aL.center.x;
+						// double aLRot = points[1].y < points[3].y ? aL.angle : 90 + aL.angle;
+						// if(Math.abs(aLX) > 0.3){
+						// 	xSpeed = 0.2*aLX/Math.abs(aLX);
+						// }
+						
+						// if(Math.abs(aLRot) > 0.3){
+						// 	zSpeed = 0.2*aLRot/Math.abs(aLRot);
+						// }
 
 					}else{
-						if(Math.abs(yRotation) >= ALIGNMENT_ANGULAR_TOLERANCE){
-							zSpeed =  clamp(0.0025*visionSystem.distanceToTarget(),0.1)*yRotation/Math.abs(yRotation);
+						if(Math.abs(yRotation) >= ALIGNMENT_LINE_ANGULAR_TOLERANCE){
+							zSpeed = ALIGNMENT_ROTATION_SPEED*yRotation/Math.abs(yRotation);
 						}else{
 							zSpeed = 0;
 						}
-						if(Math.abs(targ.translation.x) > 10){
-							xSpeed = -clamp(0.025*Math.abs(targ.translation.x), 1)*targ.translation.x/Math.abs(targ.translation.x);
+						if(Math.abs(targ.translation.x) > 2){
+							xSpeed = -0.3*targ.translation.x/Math.abs(targ.translation.x);
 						}else{
 							xSpeed = 0;
 						}
 					}
 				}
-				if(-OI.getPlaystationY() > 0){
-					if(visionSystem.server.getLastPacket().lidarDist > 8)
-						ySpeed = -OI.getThreshedPSY()* DEBUG_MULTIPLIER;
-				}else{
-					ySpeed = -OI.getThreshedPSY()* DEBUG_MULTIPLIER;
-				}
-				robotDrive.driveCartesian(xSpeed, ySpeed, zSpeed);
-				SmartDashboard.putNumber("OI.X", OI.getThreshedPSX());
-				SmartDashboard.putNumber("OI.Y", OI.getThreshedPSY());
-				SmartDashboard.putNumber("OI.Z", OI.getThreshedPSZ());
-				SmartDashboard.putNumber("xSpeed", xSpeed);
-				SmartDashboard.putNumber("ySpeed", ySpeed);
-				SmartDashboard.putNumber("zSpeed", zSpeed);
-				SmartDashboard.putNumber("gyro", 0.0);
+				robotDrive.driveCartesian(xSpeed, visionSystem.server.getLastPacket().lidarDist > 4 ? -OI.getThreshedPSY(), zSpeed);
 			    break ;
 
 			case Positioning :
 
                 if ( isInPosition() ) {
-					driveMode = DriveMode.Manual ;
-
-					// driveMode = DriveMode.Approaching ;
+					driveMode = DriveMode.Approaching ;
 				} else {
 					// need to compute angle from front of bot to target so that we can make sure the
 					// target is centered in the limelight view.
@@ -399,7 +376,7 @@ public class DriveSubsystem extends Subsystem {
 
 
 
-					//System.out.println("Bearing: " + b + "\tTrack: " + desiredTrackAngle + "\t SNavHead: " + startingHeading + "\t CNavHead: " + nav.getAngle() + "\t Dist: " + visionSystem.distanceToTarget());
+					System.out.println("Bearing: " + b.angle + "\tTrack: " + desiredTrackAngle + "\t SNavHead: " + startingHeading + "\t CNavHead: " + nav.getAngle() + "\t Dist: " + visionSystem.distanceToTarget());
 
 					// convert the angle to a rotation input to the mecanum drive
 
@@ -409,38 +386,15 @@ public class DriveSubsystem extends Subsystem {
 					// limelight field of view (FOV)
 					//desiredTrackAngle += startingHeading - nav.getAngle();  // should this be add or subtract?
 
-					//startingHeading = nav.getAngle() ;
-					double bearing = visionSystem.bearingToTarget();  // wpk need to make sure this is the right function to call
-					startBearing = bearing;
-					double bearingInRadians = Math.toRadians(bearing);
-		
-					double distanceToTarget = visionSystem.distanceToTarget() ;
-					double distanceToApproach 
-					   = Math.sqrt(distanceToTarget*distanceToTarget
-								   + APPROACH_DISTANCE*APPROACH_DISTANCE
-								   - 2.0*APPROACH_DISTANCE*visionSystem.distanceToTarget()*Math.cos(bearingInRadians)) ;
-		
-					desiredTrackAngle = Math.toDegrees(Math.asin(APPROACH_DISTANCE*Math.sin(bearingInRadians)/distanceToApproach) );
-		
-
-					//double deltaTrack = desiredTrackAngle + startingHeading-nav.getAngle() ;
+					double deltaTrack = desiredTrackAngle + startingHeading-nav.getAngle() ;
 					// wpk - need to think about the above line. Worried that its going to sum the change frame to frame
 					// which is not what we want. May need to record angle from nav x at start?
 					double zRotation = Math.abs(visionSystem.limeLight.getXOffset()) > 1 ?
 						 visionSystem.limeLight.xOffset/Math.abs(visionSystem.limeLight.xOffset)*0.1 : 0;
-
-						 SmartDashboard.putNumber("xSpeed", 1.0*DEBUG_MULTIPLIER);
-						 SmartDashboard.putNumber("ySpeed", 0.0);
-						 SmartDashboard.putNumber("zSpeed", zRotation);
-						 SmartDashboard.putNumber("gyro", desiredTrackAngle);
-	
-				    //wpk temp zero numbers out for testing
-				    //robotDrive.driveCartesian(0.0, 1.0*DEBUG_MULTIPLIER, zRotation,  desiredTrackAngle) ;
-				    robotDrive.driveCartesian(0.0, 0.3*DEBUG_MULTIPLIER, zRotation,  desiredTrackAngle) ;
-				    //robotDrive.driveCartesian(0.0, 0.4*DEBUG_MULTIPLIER, 0.0,  desiredTrackAngle) ;
-				    //robotDrive.driveCartesian(0.0, 0.0, 0.0, 0.0) ;
-
-	 
+					robotDrive.driveCartesian(0.0, 1.0*DEBUG_MULTIPLIER,
+					 zRotation, //TODO add this in
+					 //90.0) ;
+					 deltaTrack) ;
 			    }
 			    break ;
 
@@ -461,34 +415,37 @@ public class DriveSubsystem extends Subsystem {
 					// as we drive in.
 
 					// wpk - some of this code doesn't yet exist and will need to be created
-					xSpeed = OI.getThreshedPSX();
-					zSpeed = OI.getThreshedPSZ();
-					targ = visionSystem.limeLight.getCamTranslation();
-					yRotation = visionSystem.limeLight.getXOffset();
-					ySpeed = approachSpeedFactorToTarget();
-
-					if(!visionSystem.limeLight.getHasTarget()){
-						//TODO alignment line code
-							xSpeed = 0;
-							zSpeed = 0;
-							ySpeed = 0;
-							driveMode = DriveMode.Manual;
-					}else{
-						if(Math.abs(yRotation) >= ALIGNMENT_ANGULAR_TOLERANCE){
-							zSpeed = ALIGNMENT_ROTATION_SPEED*yRotation/Math.abs(yRotation);
-						}else{
-							zSpeed = 0;
-						}
-						if(Math.abs(targ.translation.x) > 2){
-							xSpeed = -DEBUG_MULTIPLIER*targ.translation.x/Math.abs(targ.translation.x);
-						}else{
-							xSpeed = 0;
-						}
-					}
-					robotDrive.driveCartesian(xSpeed, ySpeed, zSpeed);
-
+					RotatedRect alignmentLineRectangle = visionSystem.getAlignmentRectangle() ;
+					double distanceFromCenter = 0;
 					
+					if(alignmentLineRectangle == null){
+						driveMode = DriveMode.Manual;
+						return;
+					} 
+					// need to fill in the calculation that computes the X distance from the center of the line
+					// to the center line of the screen.
+					distanceFromCenter = alignmentLineRectangle.center.x - 320/2 + 33; // tbd
+					SmartDashboard.putNumber("Target Dist From Center",distanceFromCenter);
+
+					Point[] points = new Point[4];
+					
+					alignmentLineRectangle.points(points); 
+					double angleOfAlignmentLine = points[1].y < points[3].y ?
+						alignmentLineRectangle.angle : 90 + alignmentLineRectangle.angle;
+					
+					// double xSpeed = 0.0 ;
+					double ySpeed = 0.0 ;
+					double zRotation = 0.1 * (Math.abs(angleOfAlignmentLine) > ALIGNMENT_LINE_ANGULAR_TOLERANCE ?
+						angleOfAlignmentLine/Math.abs(angleOfAlignmentLine) : 0);
+					if ( Math.abs(distanceFromCenter) > ALIGNMENT_LINE_LATERAL_TOLERANCE) {
+						// The bot needs to be moved left or right
+						// fix the sign of the speed command so we go the right direction
+						xSpeed = 0.1 * (-distanceFromCenter/Math.abs(distanceFromCenter)) ;
+					}
+					ySpeed = approachSpeedFactorToTarget();
 					// System.out.println("zRotation: " + zRotation + " xSpeed: " + xSpeed + " distance: " + distanceFromCenter + " angle: " + angleOfAlignmentLine);
+
+					robotDrive.driveCartesian(0,0,0,0);
 					// robotDrive.driveCartesian( xSpeed, 0, zRotation) ;
 
 				}
@@ -511,10 +468,6 @@ public class DriveSubsystem extends Subsystem {
 		if (navAngle < 0)
 			navAngle = 360 + navAngle;
 		return navAngle ;
-	}
-	private double clamp(double value, double max){
-		double clampedValue = Math.max(0, Math.min(max, value));
-		return clampedValue;
 	}
 
 }
