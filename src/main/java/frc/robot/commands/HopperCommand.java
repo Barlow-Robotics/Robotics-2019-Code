@@ -10,17 +10,13 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj.command.Command;
 import frc.robot.OI;
 import frc.robot.Robot;
-import frc.robot.subsystems.LiftSubsystem;
-import frc.robot.subsystems.LiftSubsystem.CommandEnum;
 
-public class LiftCommand extends Command {
-
-
-  public LiftCommand() {
+public class HopperCommand extends Command {
+  public HopperCommand() {
     // Use requires() here to declare subsystem dependencies
-    requires(Robot.liftSubsystem);
+   requires(Robot.hopperSubsystem);
   }
-  boolean startLift = true;
+
   // Called just before this Command runs the first time
   @Override
   protected void initialize() {
@@ -29,15 +25,11 @@ public class LiftCommand extends Command {
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
-    if(startLift && (Robot.liftSubsystem.getLocation() == CommandEnum.Bottom ||
-           Robot.liftSubsystem.getLocation() == CommandEnum.Middle)){
-             Robot.liftSubsystem.commandedState = CommandEnum.Bottom;
-             startLift = false;
-           }
-    Robot.liftSubsystem.lift();
-    if(OI.getBox().getRawButton(6)) Robot.liftSubsystem.commandedState = LiftSubsystem.CommandEnum.Bottom;
-    if(OI.getBox().getRawButton(4)) Robot.liftSubsystem.commandedState = LiftSubsystem.CommandEnum.Middle;
-    if(OI.getBox().getRawButton(3)) Robot.liftSubsystem.commandedState = LiftSubsystem.CommandEnum.Top;
+      if(OI.getBox().getRawAxis(3) == 1){
+       Robot.hopperSubsystem.open();
+      }else{
+       Robot.hopperSubsystem.close();
+      }
   }
 
   // Make this return true when this Command no longer needs to run execute()

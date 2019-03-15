@@ -27,7 +27,6 @@ public class ArmCommand extends Command {
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
-    
   if(OI.getBox().getRawButtonPressed(1)){
     Robot.armSubsystem.toggleClaw();
   }

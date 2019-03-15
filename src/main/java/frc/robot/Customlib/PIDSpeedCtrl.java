@@ -25,7 +25,7 @@ public class PIDSpeedCtrl implements SpeedController{
         this.pidSrc = pidSrc;
         pidSrc.setPIDSourceType(PIDSourceType.kRate);
         pidCtrl = new PIDController(Kp, Ki, Kd, Kf, pidSrc, motorController);
-        SmartDashboard.putData(pidCtrl);
+        //SmartDashboard.putData(pidCtrl);
         pidCtrl.enable();
         pidCtrl.setSetpoint(0.0) ;
     }

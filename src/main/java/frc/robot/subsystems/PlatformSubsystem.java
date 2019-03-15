@@ -23,8 +23,8 @@ public class PlatformSubsystem extends Subsystem {
   double heightGroundAdjustment = 5;
   double heightPlatormAdjustment = 10;
   
-  public static Solenoid openSolenoidBack = new Solenoid(4);
-	public static Solenoid closeSolenoidBack = new Solenoid(5);
+  // public static Solenoid openSolenoidBack = new Solenoid(4);
+	// public static Solenoid closeSolenoidBack = new Solenoid(5);
   public static Solenoid openSolenoidFront = new Solenoid(6);
   public static Solenoid closeSolenoidFront = new Solenoid(7);
   public static Spark habitatMotor = new Spark(RobotMap.PWM.PLATFORM_MOTOR_PORT);
@@ -47,8 +47,8 @@ public class PlatformSubsystem extends Subsystem {
     updateBackSolenoids();
   }
   private void updateBackSolenoids() {
-    openSolenoidBack.set(openBack);
-    closeSolenoidBack.set(!openBack);
+    // openSolenoidBack.set(openBack);
+    // closeSolenoidBack.set(!openBack);
   }
   private void updateFrontSolenoids() {
     openSolenoidFront.set(openFront);

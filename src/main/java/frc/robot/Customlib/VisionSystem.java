@@ -33,8 +33,7 @@ public class VisionSystem {
 
     public void updateVision(){
 		server.updateAlignmentData();
-		SmartDashboard.putNumber("VS Bearing", this.bearingToTarget()) ;
-		SmartDashboard.putNumber("VS Distance to Target", this.distanceToTarget());
+		// System.out.println("lidar: " + lidar.getDistance());
 
 	}
 	// The tolerence of bearing to target at which we consider it safe to look at
@@ -73,7 +72,6 @@ public class VisionSystem {
 		double result = Double.MAX_VALUE;
 		double lidarDistance = server.getLastPacket().lidarDist; // wpk to-do need to fetch lidar value
 		LimeLight.Target3D target = limeLight.getAveragedCamTranslation();
-		SmartDashboard.putNumber("Average Translation", target.translation.x);
 		double x = target.translation.x;
 		double z = target.translation.y;
     	if (targetIsPresent()) {
@@ -86,7 +84,6 @@ public class VisionSystem {
 			}
 		}
 		SmartDashboard.putNumber("Lidar Distance", lidarDistance) ;
-		SmartDashboard.putNumber("LL Distance", Math.sqrt((x*x)+(z*z)));
 
 		return result;
 	}

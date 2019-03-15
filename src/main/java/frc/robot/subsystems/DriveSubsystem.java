@@ -34,7 +34,7 @@ public class DriveSubsystem extends Subsystem {
 	// fact that the PID controller may add some gain beyond the set point if the motor needs
 	// to "catch up" to the set value.
 	private final double MAX_ENCODER = 10000.0;
-	private final double DEBUG_MULTIPLIER = 0.3;
+	private final double DEBUG_MULTIPLIER = 0.75;
 	// This constant represents the reading from the distance sensor that indicates the
 	// bot is close enough to the target and we don't need to move any closer.
 	private final int CLOSE_ENOUGH = -3 ; // wpk - place holder value for now
@@ -54,9 +54,10 @@ public class DriveSubsystem extends Subsystem {
 	private final double FULL_SPEED_FACTOR = 1.0 ;
 
 	// Tolerence around centering bot to alignment line
-	private final double ALIGNMENT_LINE_LATERAL_TOLERANCE = 10.0 ;  // wpk - need to figure out what a good value is.
-	private final double ALIGNMENT_LINE_ANGULAR_TOLERANCE = 6.0 ; // wpk - need to figure out what a good value is
-	private final double ALIGNMENT_ROTATION_SPEED = 0.2 ; // wpk - need to figure out what a good value is
+	private double ALIGNMENT_LATERAL_TOLERANCE = 10.0 ;  // wpk - need to figure out what a good value is.
+	private double ALIGNMENT_TOLERANCE_P = 0.07;
+	private final double ALIGNMENT_ANGULAR_TOLERANCE = 3.0 ; // wpk - need to figure out what a good value is
+	private final double ALIGNMENT_ROTATION_SPEED = 0.05 ; // wpk - need to figure out what a good value is
 
 	// These are the proportional, integral, and derivative coefficients used in the
 	// PID control.
@@ -97,7 +98,7 @@ public class DriveSubsystem extends Subsystem {
 	private MecanumDrive robotDrive ;
 	ServerSocket outputSocket;
 	// 
-	private VisionSystem visionSystem = new VisionSystem();
+	public VisionSystem visionSystem = new VisionSystem();
 	
 	// private LimeLight limelight;
 	// private Encoder testEncoder;
@@ -208,8 +209,7 @@ public class DriveSubsystem extends Subsystem {
 		boolean hasTarget = visionSystem.limeLight.getHasTarget();
 		double dist = visionSystem.distanceToTarget();
 
-		SmartDashboard.putBoolean("hasTarget", hasTarget);
-		SmartDashboard.putNumber("Targ Dist", dist);
+		// SmartDashboard.putNumber("Targ Dist", dist);
 		return (dist > TOO_CLOSE) && hasTarget; // TBD
 	}
 
@@ -275,7 +275,7 @@ public class DriveSubsystem extends Subsystem {
 		// need to determine if we are close enough to the target and are aligned with it.
 		Target3D targ = visionSystem.limeLight.getCamTranslation();
 		// I recommend an approach such as :
-		return visionSystem.distanceToTarget() <= APPROACH_DISTANCE && targ.translation.x <= ALIGNMENT_LATERAL_TOLERANCE );
+		return visionSystem.distanceToTarget() <= APPROACH_DISTANCE && targ.translation.x <= ALIGNMENT_LATERAL_TOLERANCE;
 	}
 
 
@@ -302,33 +302,31 @@ public class DriveSubsystem extends Subsystem {
 
 	// Need to understand where this can be called from. Maybe command?
 	public void doDriving() {
-		ALIGNMENT_LATERAL_TOLERANCE = (visionSystem.distanceToTarget() < 72) ? visionSystem.distanceToTarget()*ALIGNMENT_TOLERANCE_P : 15;
+		// ALIGNMENT_LATERAL_TOLERANCE = (visionSystem.distanceToTarget() < 72) ? visionSystem.distanceToTarget()*ALIGNMENT_TOLERANCE_P : 15;
+		ALIGNMENT_LATERAL_TOLERANCE = 1;
 		visionSystem.updateVision();
-		SmartDashboard.putBoolean("AutoEnabled", isAutoAvailable());
-		SmartDashboard.putNumber("NavAngle",nav.getAngle());
-		SmartDashboard.putString("Drive mode", driveMode.name());
 		// System.out.println("frontLeftEncoder" + frontLeftEncoder.getRate());
 		// System.out.println("frontRightEncoder"+ frontRightEncoder.getRate());
 		// System.out.println("backRightEncoder"+ backRightEncoder.getRate());
 		// System.out.println("backLeftEncoder"+ backLeftEncoder.getRate());
-		SmartDashboard.putString("frontLeftEncoder", frontLeftEncoder.getRate()+"");
-		SmartDashboard.putString("frontRightEncoder", frontRightEncoder.getRate()+"");
-		SmartDashboard.putString("backRightEncoder", backRightEncoder.getRate()+"");
-		SmartDashboard.putString("backLeftEncoder", backLeftEncoder.getRate()+"");
-		SmartDashboard.putNumber("KP", KP);
-		SmartDashboard.putNumber("KI", KI);
-		SmartDashboard.putNumber("KD", KD);
+		// SmartDashboard.putString("frontLeftEncoder", frontLeftEncoder.getRate()+"");
+		// SmartDashboard.putString("frontRightEncoder", frontRightEncoder.getRate()+"");
+		// SmartDashboard.putString("backRightEncoder", backRightEncoder.getRate()+"");
+		// SmartDashboard.putString("backLeftEncoder", backLeftEncoder.getRate()+"");
+		// SmartDashboard.putNumber("KP", KP);
+		// SmartDashboard.putNumber("KI", KI);
+		// SmartDashboard.putNumber("KD", KD);
 		SmartDashboard.putNumber("LIDAR: ", visionSystem.server.getLastPacket().lidarDist);
-
-		SmartDashboard.putNumber("FL Motor", frontLeftMotor.get());
-		SmartDashboard.putNumber("FR Motor", frontRightMotor.get());
-		SmartDashboard.putNumber("BL Motor", backLeftMotor.get());
-		SmartDashboard.putNumber("BR Motor", backRightMotor.get());
+		SmartDashboard.putBoolean("hasTarget", isAutoAvailable());
+		// SmartDashboard.putNumber("FL Motor", frontLeftMotor.get());
+		// SmartDashboard.putNumber("FR Motor", frontRightMotor.get());
+		// SmartDashboard.putNumber("BL Motor", backLeftMotor.get());
+		// SmartDashboard.putNumber("BR Motor", backRightMotor.get());
 
 
 		if(driveMode == null) driveMode = DriveMode.Manual;
 		double b = visionSystem.bearingToTarget();
-		SmartDashboard.putNumber("Bearing",b);
+		// SmartDashboard.putNumber("Bearing",b);
 		double ySpeed = 0.0 ;
 
 
@@ -342,13 +340,17 @@ public class DriveSubsystem extends Subsystem {
 				// wpk this line commented out to allow compile. 
 				// robotDrive.drive(OI.getPlaystation());
 				boolean auto = OI.getPlaystation().getRawButton(3);
+				boolean hopperAuto = OI.getPlaystation().getRawButton(1);
 				double xSpeed = OI.getThreshedPSX();
 				double zSpeed = DEBUG_MULTIPLIER * OI.getThreshedPSZ();
 				Target3D targ = visionSystem.limeLight.getCamTranslation();
 				double yRotation = visionSystem.limeLight.getXOffset();
-				if(!visionSystem.limeLight.getHasTarget())
-					auto = false;
+				if(OI.getPlaystation().getRawButtonPressed(4)){
+					visionSystem.limeLight.switchLED();
+					SmartDashboard.putBoolean("Limelight light", !(visionSystem.limeLight.getLEDMode() == 1));
+				}
 				if(auto){
+					visionSystem.limeLight.X_OFFSET = -.85;
 					if(!visionSystem.limeLight.getHasTarget()){
 						//TODO alignment line code
 						xSpeed = 0;
@@ -360,27 +362,54 @@ public class DriveSubsystem extends Subsystem {
 						}else{
 							zSpeed = 0;
 						}
-						if(Math.abs(targ.translation.x) > 10){
+						if(Math.abs(targ.translation.x) > ALIGNMENT_LATERAL_TOLERANCE){
 							xSpeed = -clamp(0.025*Math.abs(targ.translation.x), 1)*targ.translation.x/Math.abs(targ.translation.x);
 						}else{
 							xSpeed = 0;
 						}
 					}
 				}
+				// else if(hopperAuto){
+				// 	visionSystem.limeLight.X_OFFSET = 0.5;
+				// 	if(!visionSystem.limeLight.getHasTarget()){
+				// 		//TODO alignment line code
+				// 		xSpeed = 0;
+				// 		zSpeed = 0;
+
+				// 	}else{
+				// 		if(Math.abs(yRotation) >= ALIGNMENT_ANGULAR_TOLERANCE){
+				// 			zSpeed =  clamp(0.0025*visionSystem.distanceToTarget(),0.1)*yRotation/Math.abs(yRotation);
+				// 		}else{
+				// 			zSpeed = 0;
+				// 		}
+				// 		if(Math.abs(targ.translation.x) > ALIGNMENT_LATERAL_TOLERANCE){
+				// 			xSpeed = -clamp(0.025*Math.abs(targ.translation.x), 1)*targ.translation.x/Math.abs(targ.translation.x);
+				// 		}else{
+				// 			xSpeed = 0;
+				// 		}
+				// 	}
+				// }
 				if(-OI.getPlaystationY() > 0){
 					if(visionSystem.server.getLastPacket().lidarDist > 8)
 						ySpeed = -OI.getThreshedPSY()* DEBUG_MULTIPLIER;
 				}else{
 					ySpeed = -OI.getThreshedPSY()* DEBUG_MULTIPLIER;
 				}
+				if(Robot.liftSubsystem.currentState == Robot.liftSubsystem.currentState.Top){
+					xSpeed *= .5;
+					ySpeed *= .5;
+				}
+
+
 				robotDrive.driveCartesian(xSpeed, ySpeed, zSpeed);
-				SmartDashboard.putNumber("OI.X", OI.getThreshedPSX());
-				SmartDashboard.putNumber("OI.Y", OI.getThreshedPSY());
-				SmartDashboard.putNumber("OI.Z", OI.getThreshedPSZ());
-				SmartDashboard.putNumber("xSpeed", xSpeed);
-				SmartDashboard.putNumber("ySpeed", ySpeed);
-				SmartDashboard.putNumber("zSpeed", zSpeed);
-				SmartDashboard.putNumber("gyro", 0.0);
+
+				// SmartDashboard.putNumber("OI.X", OI.getThreshedPSX());
+				// SmartDashboard.putNumber("OI.Y", OI.getThreshedPSY());
+				// SmartDashboard.putNumber("OI.Z", OI.getThreshedPSZ());
+				// SmartDashboard.putNumber("xSpeed", xSpeed);
+				// SmartDashboard.putNumber("ySpeed", ySpeed);
+				// SmartDashboard.putNumber("zSpeed", zSpeed);
+				// SmartDashboard.putNumber("gyro", 0.0);
 			    break ;
 
 			case Positioning :
@@ -429,10 +458,10 @@ public class DriveSubsystem extends Subsystem {
 					double zRotation = Math.abs(visionSystem.limeLight.getXOffset()) > 1 ?
 						 visionSystem.limeLight.xOffset/Math.abs(visionSystem.limeLight.xOffset)*0.1 : 0;
 
-						 SmartDashboard.putNumber("xSpeed", 1.0*DEBUG_MULTIPLIER);
-						 SmartDashboard.putNumber("ySpeed", 0.0);
-						 SmartDashboard.putNumber("zSpeed", zRotation);
-						 SmartDashboard.putNumber("gyro", desiredTrackAngle);
+						//  SmartDashboard.putNumber("xSpeed", 1.0*DEBUG_MULTIPLIER);
+						//  SmartDashboard.putNumber("ySpeed", 0.0);
+						//  SmartDashboard.putNumber("zSpeed", zRotation);
+						//  SmartDashboard.putNumber("gyro", desiredTrackAngle);
 	
 				    //wpk temp zero numbers out for testing
 				    //robotDrive.driveCartesian(0.0, 1.0*DEBUG_MULTIPLIER, zRotation,  desiredTrackAngle) ;

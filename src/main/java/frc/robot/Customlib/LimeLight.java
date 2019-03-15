@@ -22,13 +22,21 @@ public class LimeLight  {
 	public double pipeline;
 	public double horiz;
 	public double vert;
-	public double X_OFFSET = -4.0;
-ArrayList<Target3D> history = new ArrayList<Target3D>();
-public final static int averageLength = 3;
+	public double X_OFFSET = -.85;
+ArrayList<Target3D> longHistory = new ArrayList<Target3D>();
+ArrayList<Target3D> adjustedHistory = new ArrayList<Target3D>();
+
+public static final int averageLength = 3;
+public static final int longHistoryLength = 10;
+public static final int xTolerance = 10;
 
 public LimeLight(){
 	for(int i = 0; i < averageLength; i++)
-	history.add(new Target3D(0,0,0,0,0,0));
+		adjustedHistory.add(new Target3D(0,0,0,0,0,0));
+
+	for(int i = 0; i < longHistoryLength; i++)
+		longHistory.add(new Target3D(0,0,0,0,0,0));
+
 }
 
 
@@ -183,9 +191,12 @@ public LimeLight(){
 		double[] def = {-1,-1,-1,-1,-1,-1};
 		double[] data = getLimetable().getEntry("camtran").getDoubleArray(def);
 		Target3D targ =  new Target3D(new Vector3f(data[0]+X_OFFSET,-data[2],data[1]),new Vector3f(data[3],data[4],data[5]));
-		history.add(targ);
-		if(history.size() > averageLength)
-			history.remove(0);
+		longHistory.add(targ);
+		if(checkLongHistory(targ))
+			adjustedHistory.add(targ);
+
+		if(adjustedHistory.size() > averageLength)
+		adjustedHistory.remove(0);
 
 		return targ;
 	}
@@ -193,7 +204,7 @@ public LimeLight(){
 	public Target3D getAveragedCamTranslation(){
 		getCamTranslation();
 		Target3D average = new Target3D(0,0,0,0,0,0);
-		for(Target3D d : history){
+		for(Target3D d : adjustedHistory){
 			average.translation.add(d.translation);
 			average.rotation.add(d.rotation);
 		}
@@ -201,7 +212,17 @@ public LimeLight(){
 		average.rotation.multiplyScalar(1.0/averageLength);
 		return average;
 	}
-	
+
+	public boolean checkLongHistory(Target3D in){
+		double averageX = 0;
+		for(Target3D d : longHistory){
+			averageX += d.translation.x;
+		}
+		
+		averageX /= longHistoryLength;
+
+		return Math.abs(averageX - in.translation.x) > xTolerance;
+	}
 	/**
 	 * get current pipeline that is being used
 	 * @return Returns the current pipeline that is being used by the limelight

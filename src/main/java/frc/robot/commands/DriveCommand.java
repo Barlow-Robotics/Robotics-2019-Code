@@ -36,7 +36,11 @@ public class DriveCommand extends Command {
         if (Math.abs(OI.getPlaystationX()) >= .2 || Math.abs(OI.getPlaystationY()) >= .2
                 || Math.abs(OI.getPlaystationZ()) >= .2)
             Robot.driveSubsystem.SetModeManual();
-
+        
+        if(OI.getBox().getRawButtonPressed(10)){
+            Robot.driveSubsystem.visionSystem.limeLight.switchLED();
+        }
+        
         Robot.driveSubsystem.doDriving();
         // System.out.println(DriveSubsystem.autoEnable);
         // DriveSubsystem.updateAngle();

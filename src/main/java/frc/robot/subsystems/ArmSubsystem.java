@@ -15,6 +15,8 @@ import frc.robot.RobotMap;
 import frc.robot.commands.ArmCommand;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 
 public class ArmSubsystem extends Subsystem {
   public static Compressor compressor = new Compressor(); 
@@ -39,12 +41,15 @@ public class ArmSubsystem extends Subsystem {
      * */
     public void openClaw() {
       openClaw = true;
-		  updateClawSolenoids();
+      updateClawSolenoids();
+
     }
     
     public void toggleClaw() {
     	openClaw = !openClaw;
-    	updateClawSolenoids();
+      updateClawSolenoids();
+      SmartDashboard.putBoolean("Claw Open", openClaw);
+
     }
     
     /**
@@ -79,7 +84,8 @@ public class ArmSubsystem extends Subsystem {
     
     public void toggleExtend() {
     	openExtend = !openExtend;
-    	updateExtendSolenoids();
+      updateExtendSolenoids();
+      SmartDashboard.putBoolean("Arm Extended", openExtend);
     }
     
     /**
@@ -103,15 +109,14 @@ public class ArmSubsystem extends Subsystem {
         openExtend();
         openClaw();
         hasDisk = true;
-        closeExtend();
     
     }
 
     public void putDisk(){
-        openExtend();
+        closeExtend();
         closeClaw();
         hasDisk = false;
-        closeExtend();
+
     }
 
 }

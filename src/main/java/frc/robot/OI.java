@@ -57,6 +57,9 @@ public class OI {
 		return Math.abs(in) > thresh ? inputFunction(in) : 0;
   }
   private static double inputFunction(double x){
+    // if (Math.abs(x) < 0.4) {
+    //   return x*0.01;
+    // }
     return 1.25*(x-0.2); 
   }
 }

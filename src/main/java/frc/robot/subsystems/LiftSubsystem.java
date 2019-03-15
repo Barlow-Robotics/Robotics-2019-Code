@@ -10,6 +10,7 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.OI;
+import frc.robot.Robot;
 import frc.robot.RobotMap;
 import frc.robot.commands.LiftCommand;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -27,24 +28,35 @@ public class LiftSubsystem extends Subsystem {
   public DigitalInput HES_B = new DigitalInput(RobotMap.DIO.HES_B);
 
   public enum CommandEnum {Bottom, Middle, Top, None};
-  enum StateEnum {Bottom, BottomToMiddle, Middle, MiddleToBottomleavingMiddle, MiddleToBottomWaitingBottom,  MiddleToTopLeavingMiddle, MiddleToTopWaitingTop, Top, TopToMiddle};
+  enum StateEnum {Bottom, BottomToMiddle, Middle, MiddleToBottomleavingMiddle, MiddleToBottomWaitingBottom,  MiddleToTopLeavingMiddle, MiddleToTopWaitingTop, Top, TopToMiddle, StartState};
   public CommandEnum commandedState = CommandEnum.Bottom;
-  StateEnum currentState = StateEnum.Middle;
-  private final double UP_SPEED = 0.55;
-  private final double DOWN_SPEED = -0.4;
+  public StateEnum currentState = StateEnum.StartState;
+  private final double UP_SPEED = 0.72;
+  private final double DOWN_SPEED = -0.3;
+  private final double STALL_SPEED = .2;
   
   public void lift(){
-    SmartDashboard.putString("Command", commandedState.name());
     SmartDashboard.putString("Current State", currentState.name());
-    if(Math.abs(OI.getBoxY()) < .2){
+    if(OI.getBox().getRawAxis(3) != 1){
+      if(!Robot.armSubsystem.openExtend){
     switch ( currentState ){
+      case StartState:
+        liftMotor.set(UP_SPEED);
+        if(getLocation() == CommandEnum.Bottom){
+          liftMotor.set(STALL_SPEED);
+          currentState = StateEnum.Bottom;
+        }
+        else if(getLocation() == CommandEnum.Middle || getLocation() == CommandEnum.Top){
+          liftMotor.set(DOWN_SPEED);
+        }
+        
       case Bottom:
          if ( commandedState != CommandEnum.Bottom ) {
-          liftMotor.set( UP_SPEED ) ;
+          liftMotor.set(UP_SPEED ) ;
           currentState = StateEnum.BottomToMiddle ;
          }
          else{
-           liftMotor.set(0);
+           liftMotor.set(0.0);
          }
          break ;
       case BottomToMiddle:
@@ -70,7 +82,7 @@ public class LiftSubsystem extends Subsystem {
            liftMotor.set(UP_SPEED);
             currentState = StateEnum.MiddleToTopLeavingMiddle ;
          } else {
-           liftMotor.set(0.0) ;
+           liftMotor.set(STALL_SPEED) ;
          }
          break ;
       case MiddleToTopLeavingMiddle:
@@ -88,9 +100,9 @@ public class LiftSubsystem extends Subsystem {
         liftMotor.set(DOWN_SPEED);
         currentState = StateEnum.TopToMiddle;
       }
-        else if(getLocation() == CommandEnum.Top){
+     if(getLocation() == CommandEnum.Top){
            currentState = StateEnum.Top;
-         }
+      }
          break;
       case MiddleToBottomleavingMiddle:
          if(commandedState != CommandEnum.Bottom){
@@ -117,7 +129,7 @@ public class LiftSubsystem extends Subsystem {
            currentState = StateEnum.TopToMiddle ;
          }
          else{
-           liftMotor.set(0);
+           liftMotor.set(STALL_SPEED);
          }
          
         break ;
@@ -131,13 +143,10 @@ public class LiftSubsystem extends Subsystem {
          }
          break ;
         }
-      }
-      else{
-        liftMotor.set(OI.getBoxY() * .4);
-        
-      }
-        
-         
+      } 
+    }else{
+      liftMotor.set(DOWN_SPEED - 0.5);
+    } 
   }
   public CommandEnum getLocation(){
     if(!HES_F.get() && HES_B.get()){

@@ -13,7 +13,7 @@ public class Lidar{
         lidarThread = new Thread(distUpdater);
         lidarThread.start();
     }
-    public double getDistace(){
+    public double getDistance(){
         return accessDistance(true,0);
     }
 

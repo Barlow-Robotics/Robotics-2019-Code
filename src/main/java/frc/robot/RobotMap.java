@@ -45,5 +45,8 @@ public class RobotMap {
 	  public static int openClawSolenoidPort = 0;
 	  public static int closeClawSolenoidPort = 1;
 	  public static int openExtendSolenoidPort = 2;
-	  public static int closeExtendSolenoidPort = 3;
+		public static int closeExtendSolenoidPort = 3;
+		
+	  public static int openHopperPort = 4;
+	  public static int closeHopperPort = 5;
 }
