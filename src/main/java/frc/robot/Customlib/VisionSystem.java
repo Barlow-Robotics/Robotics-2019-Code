@@ -19,8 +19,8 @@ public class VisionSystem {
     // private String  targetNetTableName ;
     // private String alignmentNetTableName ;
     private Lidar lidar;
-	public LimeLight limeLight = new LimeLight();
-	public ServerIn server;
+	private LimeLight limeLight = new LimeLight();
+	private ServerIn server;
 
     public VisionSystem() {
         this.lidar = new Lidar(I2C.Port.kOnboard);
@@ -28,7 +28,7 @@ public class VisionSystem {
     }
 
     public boolean targetIsPresent() {
-        return limeLight.getHasTarget();
+        return server.getLastPacket().targetPresent;
     }
 
     public void updateVision(){
@@ -70,12 +70,12 @@ public class VisionSystem {
 		// the lidar may provide the best estimate of range
 
 		double result = Double.MAX_VALUE;
-		double lidarDistance = server.getLastPacket().lidarDist; // wpk to-do need to fetch lidar value
-		LimeLight.Target3D target = limeLight.getAveragedCamTranslation();
-		double x = target.translation.x;
-		double z = target.translation.y;
+		double lidarDistance = server.getLastPacket().lidarDistance; // wpk to-do need to fetch lidar value
+		// LimeLight.Target3D target = limeLight.getAveragedCamTranslation();
+		// double x = target.translation.x;
+		// double z = target.translation.y;
     	if (targetIsPresent()) {
-			result = Math.sqrt((x*x)+(z*z));
+			result = server.getLastPacket().distance;
 			double angle = bearingToTarget();
 			if (result < LIDAR_DISTANCE_THRESHOLD && Math.abs(angle) < LIDAR_BEARING_TOLERANCE) {
 				if (Math.abs(result - lidarDistance) < LIDAR_VISUAL_COMPARE_TOLERANCE) {
@@ -111,7 +111,18 @@ public class VisionSystem {
 		return 0;
 
 	}
-
+	public double getXTranslation(){
+		return -(server.getLastPacket().distance) * Math.sin(server.getLastPacket().angle);
+	}
+	public double getYTranslation(){
+		return (server.getLastPacket().distance * Math.cos(server.getLastPacket().angle));
+	}
+	public double getLidarDist(){
+		return server.getLastPacket().lidarDistance;
+	}
+	public double getImageXOffset(){
+		return server.getLastPacket().targetOffsetDegrees;
+	}
 
     // public boolean alignmentLineIsVisible() {
 	// 	//TODO do something else here

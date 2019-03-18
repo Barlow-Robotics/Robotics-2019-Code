@@ -22,7 +22,7 @@ public class LimeLight  {
 	public double pipeline;
 	public double horiz;
 	public double vert;
-	public double X_OFFSET = -.85;
+	// public double X_OFFSET = -.85;
 ArrayList<Target3D> longHistory = new ArrayList<Target3D>();
 ArrayList<Target3D> adjustedHistory = new ArrayList<Target3D>();
 
@@ -190,7 +190,7 @@ public LimeLight(){
 	public Target3D getCamTranslation() {
 		double[] def = {-1,-1,-1,-1,-1,-1};
 		double[] data = getLimetable().getEntry("camtran").getDoubleArray(def);
-		Target3D targ =  new Target3D(new Vector3f(data[0]+X_OFFSET,-data[2],data[1]),new Vector3f(data[3],data[4],data[5]));
+		Target3D targ =  new Target3D(new Vector3f(data[0],-data[2],data[1]),new Vector3f(data[3],data[4],data[5]));
 		longHistory.add(targ);
 		if(checkLongHistory(targ))
 			adjustedHistory.add(targ);

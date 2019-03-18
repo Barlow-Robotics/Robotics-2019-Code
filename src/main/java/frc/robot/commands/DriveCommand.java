@@ -38,7 +38,7 @@ public class DriveCommand extends Command {
             Robot.driveSubsystem.SetModeManual();
         
         if(OI.getBox().getRawButtonPressed(10)){
-            Robot.driveSubsystem.visionSystem.limeLight.switchLED();
+            // Robot.driveSubsystem.visionSystem.limeLight.switchLED();
         }
         
         Robot.driveSubsystem.doDriving();

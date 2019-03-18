@@ -56,7 +56,7 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     // DriveSubsystem.getFrontLeftMotor().setInverted(true);
     // DriveSubsystem.getBackLeftMotor().setInverted(true);
-    visionSystem.limeLight.switchLED();
+    // visionSystem.limeLight.switchLED();
     Robot.liftSubsystem.liftMotor.setInverted(true);
     CameraServer.getInstance().startAutomaticCapture();
     

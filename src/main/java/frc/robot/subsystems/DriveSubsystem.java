@@ -70,7 +70,7 @@ public class DriveSubsystem extends Subsystem {
 	// consult the WPILib docs on feed forward or look at the PIDBase code.
 	private final double KF = 1.0 / MAX_ENCODER;
 
-
+	public double X_OFFSET = -.85;
     ////////////////////
 	// Member variables
 	////////////////////
@@ -206,7 +206,7 @@ public class DriveSubsystem extends Subsystem {
 		// If this is the only place you would ever want that, you could put it here. If you might want to
 		// that from other classes (e.g., cueing the operator), consider putting it in the limelight class 
 		// so its accessible elsewhere.
-		boolean hasTarget = visionSystem.limeLight.getHasTarget();
+		boolean hasTarget = visionSystem.targetIsPresent();
 		double dist = visionSystem.distanceToTarget();
 
 		// SmartDashboard.putNumber("Targ Dist", dist);
@@ -273,9 +273,9 @@ public class DriveSubsystem extends Subsystem {
 
 	private boolean isInPosition() {
 		// need to determine if we are close enough to the target and are aligned with it.
-		Target3D targ = visionSystem.limeLight.getCamTranslation();
+		// Target3D targ = visionSystem.limeLight.getCamTranslation();
 		// I recommend an approach such as :
-		return visionSystem.distanceToTarget() <= APPROACH_DISTANCE && targ.translation.x <= ALIGNMENT_LATERAL_TOLERANCE;
+		return visionSystem.distanceToTarget() <= APPROACH_DISTANCE && visionSystem.getXTranslation() <= ALIGNMENT_LATERAL_TOLERANCE;
 	}
 
 
@@ -302,6 +302,7 @@ public class DriveSubsystem extends Subsystem {
 
 	// Need to understand where this can be called from. Maybe command?
 	public void doDriving() {
+		double xTrans = visionSystem.getXTranslation();
 		// ALIGNMENT_LATERAL_TOLERANCE = (visionSystem.distanceToTarget() < 72) ? visionSystem.distanceToTarget()*ALIGNMENT_TOLERANCE_P : 15;
 		ALIGNMENT_LATERAL_TOLERANCE = 1;
 		visionSystem.updateVision();
@@ -316,7 +317,7 @@ public class DriveSubsystem extends Subsystem {
 		// SmartDashboard.putNumber("KP", KP);
 		// SmartDashboard.putNumber("KI", KI);
 		// SmartDashboard.putNumber("KD", KD);
-		SmartDashboard.putNumber("LIDAR: ", visionSystem.server.getLastPacket().lidarDist);
+		SmartDashboard.putNumber("LIDAR: ", visionSystem.getLidarDist());
 		SmartDashboard.putBoolean("hasTarget", isAutoAvailable());
 		// SmartDashboard.putNumber("FL Motor", frontLeftMotor.get());
 		// SmartDashboard.putNumber("FR Motor", frontRightMotor.get());
@@ -343,15 +344,14 @@ public class DriveSubsystem extends Subsystem {
 				boolean hopperAuto = OI.getPlaystation().getRawButton(1);
 				double xSpeed = OI.getThreshedPSX();
 				double zSpeed = DEBUG_MULTIPLIER * OI.getThreshedPSZ();
-				Target3D targ = visionSystem.limeLight.getCamTranslation();
-				double yRotation = visionSystem.limeLight.getXOffset();
+				// Target3D targ = visionSystem.limeLight.getCamTranslation();
+				double yRotation = visionSystem.getImageXOffset();
 				if(OI.getPlaystation().getRawButtonPressed(4)){
-					visionSystem.limeLight.switchLED();
-					SmartDashboard.putBoolean("Limelight light", !(visionSystem.limeLight.getLEDMode() == 1));
-				}
+					// visionSystem.switchLED();
+				// 	SmartDashboard.putBoolean("Limelight light", !(visionSystem.limeLight.getLEDMode() == 1));
+				// }
 				if(auto){
-					visionSystem.limeLight.X_OFFSET = -.85;
-					if(!visionSystem.limeLight.getHasTarget()){
+					if(!visionSystem.targetIsPresent()){
 						//TODO alignment line code
 						xSpeed = 0;
 						zSpeed = 0;
@@ -362,8 +362,8 @@ public class DriveSubsystem extends Subsystem {
 						}else{
 							zSpeed = 0;
 						}
-						if(Math.abs(targ.translation.x) > ALIGNMENT_LATERAL_TOLERANCE){
-							xSpeed = -clamp(0.025*Math.abs(targ.translation.x), 1)*targ.translation.x/Math.abs(targ.translation.x);
+						if(Math.abs(xTrans) > ALIGNMENT_LATERAL_TOLERANCE){
+							xSpeed = -clamp(0.025*Math.abs(xTrans), 1)*xTrans/Math.abs(xTrans);
 						}else{
 							xSpeed = 0;
 						}
@@ -390,7 +390,7 @@ public class DriveSubsystem extends Subsystem {
 				// 	}
 				// }
 				if(-OI.getPlaystationY() > 0){
-					if(visionSystem.server.getLastPacket().lidarDist > 8)
+					if(visionSystem.getLidarDist() > 8)
 						ySpeed = -OI.getThreshedPSY()* DEBUG_MULTIPLIER;
 				}else{
 					ySpeed = -OI.getThreshedPSY()* DEBUG_MULTIPLIER;
@@ -410,7 +410,8 @@ public class DriveSubsystem extends Subsystem {
 				// SmartDashboard.putNumber("ySpeed", ySpeed);
 				// SmartDashboard.putNumber("zSpeed", zSpeed);
 				// SmartDashboard.putNumber("gyro", 0.0);
-			    break ;
+				break ;
+			}
 
 			case Positioning :
 
@@ -455,8 +456,8 @@ public class DriveSubsystem extends Subsystem {
 					//double deltaTrack = desiredTrackAngle + startingHeading-nav.getAngle() ;
 					// wpk - need to think about the above line. Worried that its going to sum the change frame to frame
 					// which is not what we want. May need to record angle from nav x at start?
-					double zRotation = Math.abs(visionSystem.limeLight.getXOffset()) > 1 ?
-						 visionSystem.limeLight.xOffset/Math.abs(visionSystem.limeLight.xOffset)*0.1 : 0;
+					double zRotation = Math.abs(visionSystem.getImageXOffset()) > 1 ?
+						 visionSystem.getImageXOffset()/Math.abs(visionSystem.getImageXOffset())*0.1 : 0;
 
 						//  SmartDashboard.putNumber("xSpeed", 1.0*DEBUG_MULTIPLIER);
 						//  SmartDashboard.putNumber("ySpeed", 0.0);
@@ -492,11 +493,11 @@ public class DriveSubsystem extends Subsystem {
 					// wpk - some of this code doesn't yet exist and will need to be created
 					xSpeed = OI.getThreshedPSX();
 					zSpeed = OI.getThreshedPSZ();
-					targ = visionSystem.limeLight.getCamTranslation();
-					yRotation = visionSystem.limeLight.getXOffset();
+					// targ = visionSystem.limeLight.getCamTranslation();
+					yRotation = visionSystem.getImageXOffset();
 					ySpeed = approachSpeedFactorToTarget();
 
-					if(!visionSystem.limeLight.getHasTarget()){
+					if(!visionSystem.targetIsPresent()){
 						//TODO alignment line code
 							xSpeed = 0;
 							zSpeed = 0;
@@ -508,8 +509,8 @@ public class DriveSubsystem extends Subsystem {
 						}else{
 							zSpeed = 0;
 						}
-						if(Math.abs(targ.translation.x) > 2){
-							xSpeed = -DEBUG_MULTIPLIER*targ.translation.x/Math.abs(targ.translation.x);
+						if(Math.abs(xTrans) > 2){
+							xSpeed = -DEBUG_MULTIPLIER*xTrans/Math.abs(xTrans);
 						}else{
 							xSpeed = 0;
 						}
