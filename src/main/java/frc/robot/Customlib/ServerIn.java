@@ -67,7 +67,7 @@ public class ServerIn{
         .registerTypeAdapter(Boolean.class, booleanAsIntAdapter)
         .registerTypeAdapter(boolean.class, booleanAsIntAdapter)
         .create();
-
+        
         lastPkt = new TargetDataRecord();
         try {
             socket = new DatagramSocket(port);
@@ -83,22 +83,22 @@ public class ServerIn{
     }
 
     public void updateAlignmentData(){
-        byte[] buf = new byte[1024];
-        DatagramPacket recivePacket = new DatagramPacket(buf,buf.length);
+        // byte[] buf = new byte[1024];
+        // DatagramPacket recivePacket = new DatagramPacket(buf,buf.length);
 
-        try {
-            socket.receive(recivePacket);
-        }catch(SocketTimeoutException e){
-            //System.out.println("No packet!");
-            return;
-        }catch(Exception e){
-            System.err.println(e);
-            return;
-        }
+        // try {
+        //     socket.receive(recivePacket);
+        // }catch(SocketTimeoutException e){
+        //     //System.out.println("No packet!");
+        //     return;
+        // }catch(Exception e){
+        //     System.err.println(e);
+        //     return;
+        // }
         
-        String data = new String(recivePacket.getData(), StandardCharsets.UTF_8);
-        //System.out.println("Data: " + data);
-        lastPkt = string2Packet(data);
+        // String data = new String(recivePacket.getData(), StandardCharsets.UTF_8);
+        // //System.out.println("Data: " + data);
+        // lastPkt = string2Packet(data);
     }
     public TargetDataRecord string2Packet(String pkt){
         JsonReader reader = new JsonReader( new StringReader(pkt)) ;
@@ -108,5 +108,9 @@ public class ServerIn{
         }catch(Exception e){
             return lastPkt;
         }
+    }
+
+    public void setLastPacket(TargetDataRecord targ){
+      lastPkt = targ;
     }
 }

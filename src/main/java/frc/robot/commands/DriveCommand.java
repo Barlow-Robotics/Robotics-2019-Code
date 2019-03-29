@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj.PWM;
 import edu.wpi.first.wpilibj.command.Command;
 
 import frc.robot.Robot;
@@ -25,6 +26,8 @@ public class DriveCommand extends Command {
 
     // Called repeatedly when this Command is scheduled to run
     protected void execute() {
+
+
         if (OI.getPlaystation().getRawButton(10)) {
             if ( Robot.driveSubsystem.isAutoAvailable() ) {
                 Robot.driveSubsystem.SetModeAutoApproach();

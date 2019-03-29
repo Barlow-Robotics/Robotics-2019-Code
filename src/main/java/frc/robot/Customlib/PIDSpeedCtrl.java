@@ -25,7 +25,6 @@ public class PIDSpeedCtrl implements SpeedController{
         this.pidSrc = pidSrc;
         pidSrc.setPIDSourceType(PIDSourceType.kRate);
         pidCtrl = new PIDController(Kp, Ki, Kd, Kf, pidSrc, motorController);
-        //SmartDashboard.putData(pidCtrl);
         pidCtrl.enable();
         pidCtrl.setSetpoint(0.0) ;
     }
@@ -34,6 +33,8 @@ public class PIDSpeedCtrl implements SpeedController{
     public void set(double speed){
         output.sendData(System.currentTimeMillis() + "," + speed + "," + pidSrc.pidGet());
         pidCtrl.setSetpoint(speed);
+       // SmartDashboard.putData(pidCtrl);
+
     }
 
     @Override

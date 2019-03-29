@@ -33,21 +33,22 @@ public class ArmCommand extends Command {
   if(OI.getBox().getRawButtonPressed(2)){
     Robot.armSubsystem.toggleExtend();
   }
+}
   // else if(OI.getBox().getRawButtonReleased(2)){
   //   Robot.armSubsystem.toggleExtend();
   // }
 
-  if(OI.getPlaystation().getRawButtonReleased(8)){
-    Robot.platformSubsystem.toggleBack();
-  }
-  if(OI.getPlaystation().getRawButtonReleased(7)){
-    Robot.platformSubsystem.toggleFront();
-  }
+  // if(OI.getPlaystation().getRawButtonReleased(8)){
+  //   Robot.platformSubsystem.toggleBack();
+  // }
+  // if(OI.getPlaystation().getRawButtonReleased(7)){
+  //   Robot.platformSubsystem.toggleFront();
+  // }
 
-  if(OI.getPlaystation().getRawButton(2))
-    Robot.platformSubsystem.drive(0.3);
+  // if(OI.getPlaystation().getRawButton(2))
+  //   Robot.platformSubsystem.drive(0.3);
 
-  }
+  // }
   
 
   // Make this return true when this Command no longer needs to run execute()

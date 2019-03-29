@@ -33,7 +33,7 @@ public class OI {
     return playstation.getY();
   }
   public static double getPlaystationZ(){
-    return playstation.getRawAxis(4);
+    return playstation.getZ();
   }
   public static double getThreshedPSX(){
     return threshold(playstation.getX(),threshHoldValue);
@@ -54,9 +54,12 @@ public class OI {
     return -box.getY();
   }
   private static double threshold(double in, double thresh){
-		return Math.abs(in) > thresh ? in : 0;
+		return Math.abs(in) > thresh ? inputFunction(in) : 0;
   }
   private static double inputFunction(double x){
-    return 1.25*(Math.abs(x)-0.2); 
+    // if (Math.abs(x) < 0.4) {
+    //   return x*0.01;
+    // }
+    return 1.25*(x-0.2); 
   }
 }

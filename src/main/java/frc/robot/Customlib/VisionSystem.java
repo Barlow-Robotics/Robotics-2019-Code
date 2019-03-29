@@ -1,11 +1,18 @@
 package frc.robot.Customlib;
 
+import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import java.util.ArrayList;
+//import java.util.ArrayList;
 
-import org.opencv.core.RotatedRect;
+import com.google.gson.* ;
+import com.google.gson.stream.* ;
+
+
+//import org.opencv.core.RotatedRect;
+import java.io.*;
+
 
 public class VisionSystem {
 
@@ -20,19 +27,92 @@ public class VisionSystem {
     // private String alignmentNetTableName ;
     private Lidar lidar;
 	private LimeLight limeLight = new LimeLight();
-	private ServerIn server;
+	private TargetDataRecord targetData ;
+	//private ServerIn server;
+    private Gson gson ;
+
+
+	SerialPort jevois ;
 
     public VisionSystem() {
-        this.lidar = new Lidar(I2C.Port.kOnboard);
-		this.server = new ServerIn(14580);
+				this.lidar = new Lidar(I2C.Port.kOnboard);
+				System.out.println("lidar created") ;
+				// this.server = new ServerIn(14580);
+				targetData = new TargetDataRecord() ;
+
+				jevois = new SerialPort( 9600, SerialPort.Port.kUSB) ;
+				gson = new GsonBuilder()
+						.registerTypeAdapter(Boolean.class, booleanAsIntAdapter)
+						.registerTypeAdapter(boolean.class, booleanAsIntAdapter)
+						.create();
+
     }
 
     public boolean targetIsPresent() {
-        return server.getLastPacket().targetPresent;
-    }
+        return targetData.targetPresent;
+	}
+	
+
+
+
+
+
+	private static final TypeAdapter<Boolean> booleanAsIntAdapter = new TypeAdapter<Boolean>() {
+		@Override public void write(JsonWriter out, Boolean value) throws IOException {
+		  if (value == null) {
+			out.nullValue();
+		  } else {
+			out.value(value);
+		  }
+		}
+		@Override public Boolean read(JsonReader in) throws IOException {
+		  JsonToken peek = in.peek();
+		  switch (peek) {
+		  case BOOLEAN:
+			return in.nextBoolean();
+		  case NULL:
+			in.nextNull();
+			return null;
+		  case NUMBER:
+			return in.nextInt() != 0;
+		  case STRING:
+			//return Boolean.parseBoolean(in.nextString());
+			return in.nextString().equalsIgnoreCase("1") ;
+		  default:
+			throw new IllegalStateException("Expected BOOLEAN or NUMBER but was " + peek);
+		  }
+		}
+	  };
+	
 
     public void updateVision(){
-		server.updateAlignmentData();
+		//server.updateAlignmentData();
+
+		try {
+			String json = jevois.readString() ;
+   		   // System.out.println(json) ;
+
+			String serialData = json ;
+			String[] records = serialData.split("\r\n") ;
+
+			try{
+				TargetDataRecord temp = gson.fromJson(records[ records.length-1],TargetDataRecord.class);
+				if ( temp != null) {
+					targetData = temp ;
+				}
+				if (lidar != null ) {
+						this.targetData.lidarDistance = lidar.accessDistance(true, 0 ) ;
+				}
+			} catch ( JsonParseException ex) {
+				System.out.println("Couldn't interpret Json") ;
+				System.out.println(records[ records.length-1]) ;
+				System.out.println( ex);
+			} 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+
 		// System.out.println("lidar: " + lidar.getDistance());
 
 	}
@@ -46,7 +126,7 @@ public class VisionSystem {
 	// If
 	// the bot is too far out, the lidar may not be pointing at the target
 	// consistently.
-	static final double LIDAR_DISTANCE_THRESHOLD = 36.0; // inches
+	static final double LIDAR_DISTANCE_THRESHOLD = 0; // inches
 
 	// This is the tolerence to use when comparing the lidar distance to the visual
 	// based estimate.
@@ -70,12 +150,12 @@ public class VisionSystem {
 		// the lidar may provide the best estimate of range
 
 		double result = Double.MAX_VALUE;
-		double lidarDistance = server.getLastPacket().lidarDistance; // wpk to-do need to fetch lidar value
+		double lidarDistance = targetData.lidarDistance; 
 		// LimeLight.Target3D target = limeLight.getAveragedCamTranslation();
 		// double x = target.translation.x;
 		// double z = target.translation.y;
     	if (targetIsPresent()) {
-			result = server.getLastPacket().distance;
+			result = targetData.distance;
 			double angle = bearingToTarget();
 			if (result < LIDAR_DISTANCE_THRESHOLD && Math.abs(angle) < LIDAR_BEARING_TOLERANCE) {
 				if (Math.abs(result - lidarDistance) < LIDAR_VISUAL_COMPARE_TOLERANCE) {
@@ -83,8 +163,6 @@ public class VisionSystem {
 				}
 			}
 		}
-		SmartDashboard.putNumber("Lidar Distance", lidarDistance) ;
-
 		return result;
 	}
 
@@ -112,16 +190,16 @@ public class VisionSystem {
 
 	}
 	public double getXTranslation(){
-		return -(server.getLastPacket().distance) * Math.sin(server.getLastPacket().angle);
+		return -(targetData.distance) * Math.sin(targetData.angle);
 	}
 	public double getYTranslation(){
-		return (server.getLastPacket().distance * Math.cos(server.getLastPacket().angle));
+		return (targetData.distance * Math.cos(targetData.angle));
 	}
 	public double getLidarDist(){
-		return server.getLastPacket().lidarDistance;
+		return targetData.lidarDistance;
 	}
 	public double getImageXOffset(){
-		return server.getLastPacket().targetOffsetDegrees;
+		return targetData.targetOffsetDegrees;
 	}
 
     // public boolean alignmentLineIsVisible() {

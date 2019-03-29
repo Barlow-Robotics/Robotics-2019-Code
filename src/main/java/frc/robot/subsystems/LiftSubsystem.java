@@ -145,7 +145,7 @@ public class LiftSubsystem extends Subsystem {
         }
       } 
     }else{
-      liftMotor.set(DOWN_SPEED - 0.5);
+      liftMotor.set(DOWN_SPEED - 0.3);
     } 
   }
   public CommandEnum getLocation(){

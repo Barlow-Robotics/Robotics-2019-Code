@@ -22,23 +22,6 @@ public class LimeLight  {
 	public double pipeline;
 	public double horiz;
 	public double vert;
-	// public double X_OFFSET = -.85;
-ArrayList<Target3D> longHistory = new ArrayList<Target3D>();
-ArrayList<Target3D> adjustedHistory = new ArrayList<Target3D>();
-
-public static final int averageLength = 3;
-public static final int longHistoryLength = 10;
-public static final int xTolerance = 10;
-
-public LimeLight(){
-	for(int i = 0; i < averageLength; i++)
-		adjustedHistory.add(new Target3D(0,0,0,0,0,0));
-
-	for(int i = 0; i < longHistoryLength; i++)
-		longHistory.add(new Target3D(0,0,0,0,0,0));
-
-}
-
 
 	//Limelight specs will be stored in this class
 	class specs{
@@ -60,16 +43,6 @@ public LimeLight(){
 			this.y = y;
 			this.z = z;
 		}
-		public void add(Vector3f other){
-			x += other.x;
-			y += other.y;
-			z += other.z;
-		}
-		public void multiplyScalar(double Scalar){
-			x *= Scalar;
-			y *= Scalar;
-			z *= Scalar;
-		}
 	}
 	public class Target3D{
 
@@ -77,12 +50,7 @@ public LimeLight(){
 		public Target3D(Vector3f translation, Vector3f rotation){
 			this.translation = translation;
 			this.rotation = rotation;
-			
 		}
-		public Target3D(double x1, double y1, double z1, double x2, double y2, double z2){
-			this(new Vector3f(x1,y1,z1),new Vector3f(x2, y2, z2));
-		}
-		
 	}
 	
 	/**
@@ -190,39 +158,9 @@ public LimeLight(){
 	public Target3D getCamTranslation() {
 		double[] def = {-1,-1,-1,-1,-1,-1};
 		double[] data = getLimetable().getEntry("camtran").getDoubleArray(def);
-		Target3D targ =  new Target3D(new Vector3f(data[0],-data[2],data[1]),new Vector3f(data[3],data[4],data[5]));
-		longHistory.add(targ);
-		if(checkLongHistory(targ))
-			adjustedHistory.add(targ);
-
-		if(adjustedHistory.size() > averageLength)
-		adjustedHistory.remove(0);
-
-		return targ;
+		return new Target3D(new Vector3f(data[0],data[1],data[2]),new Vector3f(data[3],data[4],data[5]));
 	}
-
-	public Target3D getAveragedCamTranslation(){
-		getCamTranslation();
-		Target3D average = new Target3D(0,0,0,0,0,0);
-		for(Target3D d : adjustedHistory){
-			average.translation.add(d.translation);
-			average.rotation.add(d.rotation);
-		}
-		average.translation.multiplyScalar(1.0/averageLength);
-		average.rotation.multiplyScalar(1.0/averageLength);
-		return average;
-	}
-
-	public boolean checkLongHistory(Target3D in){
-		double averageX = 0;
-		for(Target3D d : longHistory){
-			averageX += d.translation.x;
-		}
-		
-		averageX /= longHistoryLength;
-
-		return Math.abs(averageX - in.translation.x) > xTolerance;
-	}
+	
 	/**
 	 * get current pipeline that is being used
 	 * @return Returns the current pipeline that is being used by the limelight

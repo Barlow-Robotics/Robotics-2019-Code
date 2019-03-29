@@ -7,6 +7,7 @@ import frc.robot.Customlib.*;
 import frc.robot.Customlib.LimeLight.Target3D;
 import frc.robot.commands.DriveCommand;
 import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.PWM;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -14,7 +15,6 @@ import java.net.ServerSocket;
 import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.command.Subsystem;
-import com.kauailabs.navx.frc.AHRS;
 import org.opencv.core.*;
 
 /**
@@ -26,7 +26,6 @@ public class DriveSubsystem extends Subsystem {
 	////////////////////
 	// Constants
 	////////////////////
-
 	// wpk - 
 	// This value is a percentage of the maximum value read from an encoder
 	// when the slowest motor is driven to 100%. This number needs to account for
@@ -34,7 +33,8 @@ public class DriveSubsystem extends Subsystem {
 	// fact that the PID controller may add some gain beyond the set point if the motor needs
 	// to "catch up" to the set value.
 	private final double MAX_ENCODER = 10000.0;
-	private final double DEBUG_MULTIPLIER = 0.75;
+	private final double DEBUG_MULTIPLIER = 0.2;
+	
 	// This constant represents the reading from the distance sensor that indicates the
 	// bot is close enough to the target and we don't need to move any closer.
 	private final int CLOSE_ENOUGH = -3 ; // wpk - place holder value for now
@@ -42,28 +42,28 @@ public class DriveSubsystem extends Subsystem {
 	// Distance where we really want to start slowing down
 	private final int ALMOST_THERE = 10 ; // wpk - place holder value for now
 	// low speed for final approach
-	private final double FINAL_APPROACH_SPEED_FACTOR = 0.25 ; // wpk - place holder value for now
+	private final double FINAL_APPROACH_SPEED_FACTOR = 0.4 ; // wpk - place holder value for now
 
 	// Distance at which we will start our approach
 	private final double APPROACH_DISTANCE = 30.0 ; // wpk - place holder value for now
 	// Speed we will use for start of our approach
-	private final double APPROACH_SPEED_FACTOR = 0.5 ; // wpk - place holder value for now
+	private final double APPROACH_SPEED_FACTOR = 0.6 ; // wpk - place holder value for now
 
 
 	// Speed when outside approach distance
 	private final double FULL_SPEED_FACTOR = 1.0 ;
-
+	private final double ROTATION_SPEED = .05;
 	// Tolerence around centering bot to alignment line
-	private double ALIGNMENT_LATERAL_TOLERANCE = 10.0 ;  // wpk - need to figure out what a good value is.
-	private double ALIGNMENT_TOLERANCE_P = 0.07;
-	private final double ALIGNMENT_ANGULAR_TOLERANCE = 3.0 ; // wpk - need to figure out what a good value is
+	private final double ALIGNMENT_LATERAL_TOLERANCE = 4.0 ;  // wpk - need to figure out what a good value is.
+	//private double ALIGNMENT_TOLERANCE_P = 0.07;
+	private final double ALIGNMENT_ANGULAR_TOLERANCE = 0.1 ; // wpk - need to figure out what a good value is
 	private final double ALIGNMENT_ROTATION_SPEED = 0.05 ; // wpk - need to figure out what a good value is
 
 	// These are the proportional, integral, and derivative coefficients used in the
 	// PID control.
-	public double KP = 0.00002; // update when PID is tuned
-	public double KI = 0.0; // update when PID is tuned
-	public double KD = 0.000000005; // update when PID is tuned
+	private final double KP = 0.00002; // update when PID is tuned
+	private final double KI = 0.0; //0.0; // update when PID is tuned
+	private final double KD = 0.000000005; // update when PID is tuned
 
 	// This is the feed forward term used in the PID controller. For understanding
 	// what this is for,
@@ -76,10 +76,10 @@ public class DriveSubsystem extends Subsystem {
 	////////////////////
 
 	// Speed Controllers for the motors
-	private Spark frontLeftMotor; // = new Spark(RobotMap.PWM.FRONT_LEFT_MOTOR_PORT);
-	private Spark frontRightMotor; // = new Spark(RobotMap.PWM.FRONT_RIGHT_MOTOR_PORT);
-	private Spark backLeftMotor; // = new Spark(RobotMap.PWM.BACK_LEFT_MOTOR_PORT);
-	private Spark backRightMotor; // = new Spark(RobotMap.PWM.BACK_RIGHT_MOTOR_PORT);
+	private Spark frontLeftMotor; // = new VictorSP(RobotMap.PWM.FRONT_LEFT_MOTOR_PORT);
+	private Spark frontRightMotor; // = new VictorSP(RobotMap.PWM.FRONT_RIGHT_MOTOR_PORT);
+	private Spark backLeftMotor; // = new VictorSP(RobotMap.PWM.BACK_LEFT_MOTOR_PORT);
+	private Spark backRightMotor; // = new VictorSP(RobotMap.PWM.BACK_RIGHT_MOTOR_PORT);
 
 	// Encoders for each wheel
 	private Encoder frontLeftEncoder;
@@ -98,7 +98,7 @@ public class DriveSubsystem extends Subsystem {
 	private MecanumDrive robotDrive ;
 	ServerSocket outputSocket;
 	// 
-	public VisionSystem visionSystem = new VisionSystem();
+	private VisionSystem visionSystem = new VisionSystem();
 	
 	// private LimeLight limelight;
 	// private Encoder testEncoder;
@@ -107,7 +107,7 @@ public class DriveSubsystem extends Subsystem {
 	// private Webcam alignmentCam ;  // This refers to the web cam used to pick up the alignment lines.
 
 	private boolean autoEnable = false;
-	private AHRS nav;
+	//private AHRS nav;
 	private double navAngle = 0;
 
 	// This is the direction of travel we want the bot to follow when in positioning mode
@@ -122,7 +122,7 @@ public class DriveSubsystem extends Subsystem {
 	};
 
 	DriveMode driveMode;
-	// public class MotorIntercept extends Spark{
+	// public class MotorIntercept extends VictorSP{
 	// 	public double lastSetSpeed = 0;
 	// 	public MotorIntercept(int port){
 	// 		super(port);
@@ -138,7 +138,8 @@ public class DriveSubsystem extends Subsystem {
 	// 		return Math.abs(in) > thresh ? in : 0;
 	// 	}
 	// }
-	
+	PWM leds = new PWM(0);
+
 	public DriveSubsystem() {
 
 		frontLeftMotor = new Spark(RobotMap.PWM.FRONT_LEFT_MOTOR_PORT);
@@ -168,10 +169,8 @@ public class DriveSubsystem extends Subsystem {
 		backRightEncoder.reset();
 		backRightEncoder.setName("BR encoder");
 
-//		frontRightEncoder.setReverseDirection(true);
-//		backRightEncoder.setReverseDirection(true);
-//		frontLeftEncoder.setReverseDirection(true);
-//		backLeftEncoder.setReverseDirection(true);
+		// frontRightEncoder.setReverseDirection(true);
+		// backRightEncoder.setReverseDirection(true);
 
 		frontLeftSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, frontLeftEncoder, frontLeftMotor, 14572);
 		frontRightSpeedCtrl = new PIDSpeedCtrl(KP, KI, KD, KF, frontRightEncoder, frontRightMotor,14573);
@@ -185,7 +184,7 @@ public class DriveSubsystem extends Subsystem {
 		// alignmentCam = new WebCam() ;
 		// ard = new Arduino();
 		// gripz = new GripPipeline();
-		nav = new AHRS(Port.kMXP);
+		//nav = new AHRS(Port.kMXP);
 
 		driveMode = DriveMode.Manual;
 
@@ -209,7 +208,6 @@ public class DriveSubsystem extends Subsystem {
 		boolean hasTarget = visionSystem.targetIsPresent();
 		double dist = visionSystem.distanceToTarget();
 
-		// SmartDashboard.putNumber("Targ Dist", dist);
 		return (dist > TOO_CLOSE) && hasTarget; // TBD
 	}
 
@@ -273,7 +271,7 @@ public class DriveSubsystem extends Subsystem {
 
 	private boolean isInPosition() {
 		// need to determine if we are close enough to the target and are aligned with it.
-		// Target3D targ = visionSystem.limeLight.getCamTranslation();
+
 		// I recommend an approach such as :
 		return visionSystem.distanceToTarget() <= APPROACH_DISTANCE && visionSystem.getXTranslation() <= ALIGNMENT_LATERAL_TOLERANCE;
 	}
@@ -303,8 +301,8 @@ public class DriveSubsystem extends Subsystem {
 	// Need to understand where this can be called from. Maybe command?
 	public void doDriving() {
 		double xTrans = visionSystem.getXTranslation();
+		SmartDashboard.putNumber("Distance To Target", visionSystem.distanceToTarget()) ;
 		// ALIGNMENT_LATERAL_TOLERANCE = (visionSystem.distanceToTarget() < 72) ? visionSystem.distanceToTarget()*ALIGNMENT_TOLERANCE_P : 15;
-		ALIGNMENT_LATERAL_TOLERANCE = 1;
 		visionSystem.updateVision();
 		// System.out.println("frontLeftEncoder" + frontLeftEncoder.getRate());
 		// System.out.println("frontRightEncoder"+ frontRightEncoder.getRate());
@@ -314,15 +312,22 @@ public class DriveSubsystem extends Subsystem {
 		// SmartDashboard.putString("frontRightEncoder", frontRightEncoder.getRate()+"");
 		// SmartDashboard.putString("backRightEncoder", backRightEncoder.getRate()+"");
 		// SmartDashboard.putString("backLeftEncoder", backLeftEncoder.getRate()+"");
-		// SmartDashboard.putNumber("KP", KP);
-		// SmartDashboard.putNumber("KI", KI);
-		// SmartDashboard.putNumber("KD", KD);
+		//SmartDashboard.putNumber("KP", KP);
+		//SmartDashboard.putNumber("KI", KI);
+		//SmartDashboard.putNumber("KD", KD);
 		SmartDashboard.putNumber("LIDAR: ", visionSystem.getLidarDist());
 		SmartDashboard.putBoolean("hasTarget", isAutoAvailable());
+		if(isAutoAvailable())
+			leds.setRaw(255);
+		else
+			leds.setRaw(0);
+		SmartDashboard.putNumber("X Translation", xTrans);
+		SmartDashboard.putNumber("X offset", visionSystem.getImageXOffset());
 		// SmartDashboard.putNumber("FL Motor", frontLeftMotor.get());
 		// SmartDashboard.putNumber("FR Motor", frontRightMotor.get());
 		// SmartDashboard.putNumber("BL Motor", backLeftMotor.get());
 		// SmartDashboard.putNumber("BR Motor", backRightMotor.get());
+
 
 
 		if(driveMode == null) driveMode = DriveMode.Manual;
@@ -349,25 +354,39 @@ public class DriveSubsystem extends Subsystem {
 				if(OI.getPlaystation().getRawButtonPressed(4)){
 					// visionSystem.switchLED();
 				// 	SmartDashboard.putBoolean("Limelight light", !(visionSystem.limeLight.getLEDMode() == 1));
-				// }
+				}
 				if(auto){
 					if(!visionSystem.targetIsPresent()){
 						//TODO alignment line code
 						xSpeed = 0;
 						zSpeed = 0;
+						// if(OI.getThreshedPSY() < 0)
+						//     ySpeed = -OI.getThreshedPSY()* approachSpeedFactorToTarget() * DEBUG_MULTIPLIER;
+						// else 
+						//     ySpeed = -OI.getThreshedPSY() * DEBUG_MULTIPLIER;
 
 					}else{
+						if(OI.getThreshedPSY() < 0)
+						    ySpeed = -OI.getThreshedPSY()* approachSpeedFactorToTarget() * DEBUG_MULTIPLIER;
+						else 
+						    ySpeed = -OI.getThreshedPSY() * DEBUG_MULTIPLIER;
 						if(Math.abs(yRotation) >= ALIGNMENT_ANGULAR_TOLERANCE){
-							zSpeed =  clamp(0.0025*visionSystem.distanceToTarget(),0.1)*yRotation/Math.abs(yRotation);
+							zSpeed =  clamp((yRotation/20) * ROTATION_SPEED ,-ROTATION_SPEED, ROTATION_SPEED);
 						}else{
 							zSpeed = 0;
 						}
-						if(Math.abs(xTrans) > ALIGNMENT_LATERAL_TOLERANCE){
-							xSpeed = -clamp(0.025*Math.abs(xTrans), 1)*xTrans/Math.abs(xTrans);
-						}else{
-							xSpeed = 0;
-						}
+						xSpeed = 0;
+						// if(Math.abs(xTrans) > ALIGNMENT_LATERAL_TOLERANCE){
+						// 	System.out.println(xTrans + ", " + ALIGNMENT_LATERAL_TOLERANCE);
+
+						// 	xSpeed = -clamp(0.015*xTrans, 1);
+						// }else{
+						// 	xSpeed = 0;
+						// }
 					}
+				}
+				else{
+					ySpeed = -OI.getThreshedPSY() * DEBUG_MULTIPLIER;
 				}
 				// else if(hopperAuto){
 				// 	visionSystem.limeLight.X_OFFSET = 0.5;
@@ -389,29 +408,28 @@ public class DriveSubsystem extends Subsystem {
 				// 		}
 				// 	}
 				// }
-				if(-OI.getPlaystationY() > 0){
-					if(visionSystem.getLidarDist() > 8)
-						ySpeed = -OI.getThreshedPSY()* DEBUG_MULTIPLIER;
-				}else{
-					ySpeed = -OI.getThreshedPSY()* DEBUG_MULTIPLIER;
-				}
-				if(Robot.liftSubsystem.currentState == Robot.liftSubsystem.currentState.Top){
-					xSpeed *= .5;
-					ySpeed *= .5;
-				}
+				// if(-OI.getPlaystationY() > 0){
+				// 	//if(visionSystem.getLidarDist() > 8)
+						
+				// }else{
+				// 	ySpeed = -OI.getThreshedPSY()* approachSpeedFactorToTarget();
+				// }
+				// if(Robot.liftSubsystem.currentState == Robot.liftSubsystem.currentState.Top){
+				// 	xSpeed *= .5;
+				// 	ySpeed *= .5;
+				// }
 
-
+			//	System.out.println(xSpeed + " , " + ySpeed + " , " + zSpeed);
 				robotDrive.driveCartesian(xSpeed, ySpeed, zSpeed);
 
 				// SmartDashboard.putNumber("OI.X", OI.getThreshedPSX());
 				// SmartDashboard.putNumber("OI.Y", OI.getThreshedPSY());
 				// SmartDashboard.putNumber("OI.Z", OI.getThreshedPSZ());
-				// SmartDashboard.putNumber("xSpeed", xSpeed);
-				// SmartDashboard.putNumber("ySpeed", ySpeed);
-				// SmartDashboard.putNumber("zSpeed", zSpeed);
+				SmartDashboard.putNumber("xSpeed", xSpeed);
+				SmartDashboard.putNumber("ySpeed", ySpeed);
+				SmartDashboard.putNumber("zSpeed", zSpeed);
 				// SmartDashboard.putNumber("gyro", 0.0);
-				break ;
-			}
+			    break ;
 
 			case Positioning :
 
@@ -496,28 +514,28 @@ public class DriveSubsystem extends Subsystem {
 					// targ = visionSystem.limeLight.getCamTranslation();
 					yRotation = visionSystem.getImageXOffset();
 					ySpeed = approachSpeedFactorToTarget();
-
+					
 					if(!visionSystem.targetIsPresent()){
 						//TODO alignment line code
 							xSpeed = 0;
 							zSpeed = 0;
 							ySpeed = 0;
-							driveMode = DriveMode.Manual;
+						driveMode = DriveMode.Manual;
 					}else{
 						if(Math.abs(yRotation) >= ALIGNMENT_ANGULAR_TOLERANCE){
 							zSpeed = ALIGNMENT_ROTATION_SPEED*yRotation/Math.abs(yRotation);
 						}else{
 							zSpeed = 0;
-						}
+					} 
 						if(Math.abs(xTrans) > 2){
 							xSpeed = -DEBUG_MULTIPLIER*xTrans/Math.abs(xTrans);
 						}else{
 							xSpeed = 0;
-						}
 					}
-					robotDrive.driveCartesian(xSpeed, ySpeed, zSpeed);
+					}
+					robotDrive.driveCartesian(0, ySpeed, zSpeed);
 
-					
+
 					// System.out.println("zRotation: " + zRotation + " xSpeed: " + xSpeed + " distance: " + distanceFromCenter + " angle: " + angleOfAlignmentLine);
 					// robotDrive.driveCartesian( xSpeed, 0, zRotation) ;
 
@@ -537,7 +555,8 @@ public class DriveSubsystem extends Subsystem {
 	}
 
     private double getCompassHeading() {
-		double navAngle = nav.getAngle() % 360;
+//		double navAngle = nav.getAngle() % 360;
+		double navAngle = 0;
 		if (navAngle < 0)
 			navAngle = 360 + navAngle;
 		return navAngle ;
@@ -545,6 +564,16 @@ public class DriveSubsystem extends Subsystem {
 	private double clamp(double value, double max){
 		double clampedValue = Math.max(0, Math.min(max, value));
 		return clampedValue;
+	}
+
+
+	private double clamp(double value, double min, double max){
+		if ( value < min ) {
+			return min ;
+		} else if ( value > max) {
+			return max ;
+		}
+		return value ;
 	}
 
 }

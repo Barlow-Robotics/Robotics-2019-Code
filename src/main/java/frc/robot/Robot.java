@@ -7,22 +7,14 @@
 
 package frc.robot;
 import edu.wpi.first.wpilibj.Preferences;
-import edu.wpi.cscore.HttpCamera;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.commands.ArmCommand;
-import frc.robot.commands.DriveCommand;
-import frc.robot.commands.LiftCommand;
-import frc.robot.commands.HopperCommand;
-import frc.robot.subsystems.ArmSubsystem;
-import frc.robot.subsystems.DriveSubsystem;
-import frc.robot.subsystems.HopperSubsystem;
-import frc.robot.subsystems.LiftSubsystem;
-import frc.robot.subsystems.PlatformSubsystem;
+import frc.robot.commands.*;
+import frc.robot.subsystems.*;
 import frc.robot.Customlib.*;
 
 
@@ -37,12 +29,10 @@ public class Robot extends TimedRobot {
 
   // wpk this class will have to be updated to create the vision system and provide it to the drive subsystem
 
-  private VisionSystem visionSystem = new VisionSystem();
+  private VisionSystem visionSystem ;
   public static DriveSubsystem driveSubsystem = new DriveSubsystem();
   public static ArmSubsystem armSubsystem = new ArmSubsystem();
   public static LiftSubsystem liftSubsystem = new LiftSubsystem();
-  public static PlatformSubsystem platformSubsystem = new PlatformSubsystem();
-  public static HopperSubsystem hopperSubsystem = new HopperSubsystem();
   public  OI m_oi;
 
   Command m_autonomousCommand;
@@ -56,17 +46,13 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     // DriveSubsystem.getFrontLeftMotor().setInverted(true);
     // DriveSubsystem.getBackLeftMotor().setInverted(true);
-    // visionSystem.limeLight.switchLED();
-    Robot.liftSubsystem.liftMotor.setInverted(true);
-    CameraServer.getInstance().startAutomaticCapture();
+    liftSubsystem.liftMotor.setInverted(true);
     
-    ArmSubsystem.compressor.start();
+    CameraServer.getInstance().startAutomaticCapture();    
     m_oi = new OI();
     m_chooser.setDefaultOption("Default Auto", new DriveCommand());
-    m_chooser.addOption("Default Auto", new LiftCommand());
-    m_chooser.addOption("Default Auto", new ArmCommand());
-   m_chooser.addOption("Default Auto", new HopperCommand());
-    // chooser.addOption("My Auto", new MyAutoCommand());
+    m_chooser.addOption("My Auto", new ArmCommand());
+    m_chooser.addOption("My Auto", new LiftCommand());
     SmartDashboard.putData("Auto mode", m_chooser);
   }
 
