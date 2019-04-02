@@ -8,6 +8,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.command.Command;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.OI;
 import frc.robot.Robot;
 import frc.robot.subsystems.LiftSubsystem;
@@ -29,6 +30,9 @@ public class LiftCommand extends Command {
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
+    SmartDashboard.putBoolean("HES_B", Robot.liftSubsystem.HES_B.get());
+    SmartDashboard.putBoolean("HES_F", Robot.liftSubsystem.HES_F.get());
+
     if(startLift && (Robot.liftSubsystem.getLocation() == CommandEnum.Bottom ||
            Robot.liftSubsystem.getLocation() == CommandEnum.Middle)){
              Robot.liftSubsystem.commandedState = CommandEnum.Bottom;

@@ -35,6 +35,10 @@ public class RobotMap {
 		public static final int HES_F = 9;
 		public static final int HES_B = 8;
 	}
+	public static final class BUTTONS{
+		public static final boolean auto = OI.getPlaystation().getRawButton(3);
+
+	}
   	//CONTROLLER
 	//Test
 	public static final class Controllers{

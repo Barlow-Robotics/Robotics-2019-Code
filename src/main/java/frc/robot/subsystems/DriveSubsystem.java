@@ -49,7 +49,9 @@ public class DriveSubsystem extends Subsystem {
 	// Speed we will use for start of our approach
 	private final double APPROACH_SPEED_FACTOR = 0.6 ; // wpk - place holder value for now
 
-
+	private final double BOTTOM_RAMP = .2;
+	private final double MID_RAMP = .5;
+	private final double TOP_RAMP = .8;
 	// Speed when outside approach distance
 	private final double FULL_SPEED_FACTOR = 1.0 ;
 	private final double ROTATION_SPEED = .05;
@@ -118,7 +120,7 @@ public class DriveSubsystem extends Subsystem {
 	private double startingHeading ;
 
 	enum DriveMode {
-		Manual, Positioning, Approaching
+		Manual, Auto
 	};
 
 	DriveMode driveMode;
@@ -248,7 +250,7 @@ public class DriveSubsystem extends Subsystem {
 
 			// desiredTrackAngle = Math.toDegrees(Math.asin(APPROACH_DISTANCE*Math.sin(bearingInRadians)/distanceToApproach) );
 
-			driveMode = DriveMode.Positioning ;
+			driveMode = DriveMode.Auto ;
 		}
 	}
 
@@ -265,7 +267,7 @@ public class DriveSubsystem extends Subsystem {
 		// backRightSpeedCtrl.reset() ;
 	}
 	public void setModePositioning() {
-		driveMode = DriveMode.Positioning;
+//		driveMode = DriveMode.Positioning;
 		System.out.println("In positioning mode");
 	}
 
@@ -316,8 +318,8 @@ public class DriveSubsystem extends Subsystem {
 		//SmartDashboard.putNumber("KI", KI);
 		//SmartDashboard.putNumber("KD", KD);
 		SmartDashboard.putNumber("LIDAR: ", visionSystem.getLidarDist());
-		SmartDashboard.putBoolean("hasTarget", isAutoAvailable());
-		if(isAutoAvailable())
+		SmartDashboard.putBoolean("hasTarget", visionSystem.targetIsPresent());
+		if(visionSystem.targetIsPresent())
 			leds.setRaw(255);
 		else
 			leds.setRaw(0);
@@ -333,61 +335,21 @@ public class DriveSubsystem extends Subsystem {
 		if(driveMode == null) driveMode = DriveMode.Manual;
 		double b = visionSystem.bearingToTarget();
 		// SmartDashboard.putNumber("Bearing",b);
+		double xSpeed = 0.0 ;
 		double ySpeed = 0.0 ;
-
+		double zSpeed = 0.0 ;
 
         switch ( driveMode ) {
 			
 			case Manual :
-				   // In this case, we just listen to the operator. 
-				   // The following code was lifted from the original member function called mecanum()
-				   // wpk - Do we need to cal drive cartesian here witrh X, Y, Z values derived from the
-				   // joystick inputs?
-				// wpk this line commented out to allow compile. 
-				// robotDrive.drive(OI.getPlaystation());
-				boolean auto = OI.getPlaystation().getRawButton(3);
-				boolean hopperAuto = OI.getPlaystation().getRawButton(1);
-				double xSpeed = OI.getThreshedPSX();
-				double zSpeed = DEBUG_MULTIPLIER * OI.getThreshedPSZ();
-				// Target3D targ = visionSystem.limeLight.getCamTranslation();
-				double yRotation = visionSystem.getImageXOffset();
-				if(OI.getPlaystation().getRawButtonPressed(4)){
-					// visionSystem.switchLED();
-				// 	SmartDashboard.putBoolean("Limelight light", !(visionSystem.limeLight.getLEDMode() == 1));
-				}
-				if(auto){
-					if(!visionSystem.targetIsPresent()){
-						//TODO alignment line code
-						xSpeed = 0;
-						zSpeed = 0;
-						// if(OI.getThreshedPSY() < 0)
-						//     ySpeed = -OI.getThreshedPSY()* approachSpeedFactorToTarget() * DEBUG_MULTIPLIER;
-						// else 
-						//     ySpeed = -OI.getThreshedPSY() * DEBUG_MULTIPLIER;
-
-					}else{
-						if(OI.getThreshedPSY() < 0)
-						    ySpeed = -OI.getThreshedPSY()* approachSpeedFactorToTarget() * DEBUG_MULTIPLIER;
-						else 
-						    ySpeed = -OI.getThreshedPSY() * DEBUG_MULTIPLIER;
-						if(Math.abs(yRotation) >= ALIGNMENT_ANGULAR_TOLERANCE){
-							zSpeed =  clamp((yRotation/20) * ROTATION_SPEED ,-ROTATION_SPEED, ROTATION_SPEED);
-						}else{
-							zSpeed = 0;
-						}
-						xSpeed = 0;
-						// if(Math.abs(xTrans) > ALIGNMENT_LATERAL_TOLERANCE){
-						// 	System.out.println(xTrans + ", " + ALIGNMENT_LATERAL_TOLERANCE);
-
-						// 	xSpeed = -clamp(0.015*xTrans, 1);
-						// }else{
-						// 	xSpeed = 0;
-						// }
-					}
-				}
-				else{
-					ySpeed = -OI.getThreshedPSY() * DEBUG_MULTIPLIER;
-				}
+			if(RobotMap.BUTTONS.auto) driveMode = DriveMode.Auto;
+				xSpeed = DEBUG_MULTIPLIER * OI.getThreshedPSX();
+				ySpeed = DEBUG_MULTIPLIER * OI.getThreshedPSY();
+				zSpeed = DEBUG_MULTIPLIER * OI.getThreshedPSZ();				
+				// if(OI.getPlaystation().getRawButtonPressed(4)){
+				// 	// visionSystem.switchLED();
+				// // 	SmartDashboard.putBoolean("Limelight light", !(visionSystem.limeLight.getLEDMode() == 1));
+				// }
 				// else if(hopperAuto){
 				// 	visionSystem.limeLight.X_OFFSET = 0.5;
 				// 	if(!visionSystem.limeLight.getHasTarget()){
@@ -420,24 +382,46 @@ public class DriveSubsystem extends Subsystem {
 				// }
 
 			//	System.out.println(xSpeed + " , " + ySpeed + " , " + zSpeed);
-				robotDrive.driveCartesian(xSpeed, ySpeed, zSpeed);
-
 				// SmartDashboard.putNumber("OI.X", OI.getThreshedPSX());
 				// SmartDashboard.putNumber("OI.Y", OI.getThreshedPSY());
 				// SmartDashboard.putNumber("OI.Z", OI.getThreshedPSZ());
-				SmartDashboard.putNumber("xSpeed", xSpeed);
-				SmartDashboard.putNumber("ySpeed", ySpeed);
-				SmartDashboard.putNumber("zSpeed", zSpeed);
+				// SmartDashboard.putNumber("xSpeed", xSpeed);
+				// SmartDashboard.putNumber("ySpeed", ySpeed);
+				// SmartDashboard.putNumber("zSpeed", zSpeed);
 				// SmartDashboard.putNumber("gyro", 0.0);
 			    break ;
 
-			case Positioning :
+			case Auto :
+			if(!RobotMap.BUTTONS.auto) driveMode = DriveMode.Manual;
+			double yRotation = visionSystem.getImageXOffset();
+				if(!visionSystem.targetIsPresent()){
+					xSpeed = 0;
+					zSpeed = 0;
+					// if(OI.getThreshedPSY() < 0)
+					//     ySpeed = -OI.getThreshedPSY()* approachSpeedFactorToTarget() * DEBUG_MULTIPLIER;
+					// else 
+					//     ySpeed = -OI.getThreshedPSY() * DEBUG_MULTIPLIER;
 
-                if ( isInPosition() ) {
-					driveMode = DriveMode.Manual ;
+				}else{
+					if(OI.getThreshedPSY() < 0)
+						ySpeed = -OI.getThreshedPSY()* approachSpeedFactorToTarget() * DEBUG_MULTIPLIER;
+					else 
+						ySpeed = -OI.getThreshedPSY() * DEBUG_MULTIPLIER;
+					if(Math.abs(yRotation) >= ALIGNMENT_ANGULAR_TOLERANCE){
+						zSpeed =  clamp((yRotation/20) * ROTATION_SPEED ,-ROTATION_SPEED, ROTATION_SPEED);
+					}else{
+						zSpeed = 0;
+					}
+					xSpeed = 0;
+					// if(Math.abs(xTrans) > ALIGNMENT_LATERAL_TOLERANCE){
+					// 	System.out.println(xTrans + ", " + ALIGNMENT_LATERAL_TOLERANCE);
 
+					// 	xSpeed = -clamp(0.015*xTrans, 1);
+					// }else{
+					// 	xSpeed = 0;
+					// }
+				}
 					// driveMode = DriveMode.Approaching ;
-				} else {
 					// need to compute angle from front of bot to target so that we can make sure the
 					// target is centered in the limelight view.
 					// LimeLight.Target3D targ = visionSystem.limeLight.getCamTranslation();
@@ -454,97 +438,39 @@ public class DriveSubsystem extends Subsystem {
 
 					// Once this angle is computed, the desired track will be updated so that the bot
 					// will move along the desired track after rotating the bot to center the target in the
-					// limelight field of view (FOV)
-					//desiredTrackAngle += startingHeading - nav.getAngle();  // should this be add or subtract?
+					// // limelight field of view (FOV)
+					// //desiredTrackAngle += startingHeading - nav.getAngle();  // should this be add or subtract?
 
-					//startingHeading = nav.getAngle() ;
-					double bearing = visionSystem.bearingToTarget();  // wpk need to make sure this is the right function to call
-					startBearing = bearing;
-					double bearingInRadians = Math.toRadians(bearing);
+					// //startingHeading = nav.getAngle() ;
+					// double bearing = visionSystem.bearingToTarget();  // wpk need to make sure this is the right function to call
+					// startBearing = bearing;
+					// double bearingInRadians = Math.toRadians(bearing);
 		
-					double distanceToTarget = visionSystem.distanceToTarget() ;
-					double distanceToApproach 
-					   = Math.sqrt(distanceToTarget*distanceToTarget
-								   + APPROACH_DISTANCE*APPROACH_DISTANCE
-								   - 2.0*APPROACH_DISTANCE*visionSystem.distanceToTarget()*Math.cos(bearingInRadians)) ;
+					// double distanceToTarget = visionSystem.distanceToTarget() ;
+					// double distanceToApproach 
+					//    = Math.sqrt(distanceToTarget*distanceToTarget
+					// 			   + APPROACH_DISTANCE*APPROACH_DISTANCE
+					// 			   - 2.0*APPROACH_DISTANCE*visionSystem.distanceToTarget()*Math.cos(bearingInRadians)) ;
 		
-					desiredTrackAngle = Math.toDegrees(Math.asin(APPROACH_DISTANCE*Math.sin(bearingInRadians)/distanceToApproach) );
+					// desiredTrackAngle = Math.toDegrees(Math.asin(APPROACH_DISTANCE*Math.sin(bearingInRadians)/distanceToApproach) );
 		
 
-					//double deltaTrack = desiredTrackAngle + startingHeading-nav.getAngle() ;
-					// wpk - need to think about the above line. Worried that its going to sum the change frame to frame
-					// which is not what we want. May need to record angle from nav x at start?
-					double zRotation = Math.abs(visionSystem.getImageXOffset()) > 1 ?
-						 visionSystem.getImageXOffset()/Math.abs(visionSystem.getImageXOffset())*0.1 : 0;
+					// //double deltaTrack = desiredTrackAngle + startingHeading-nav.getAngle() ;
+					// // wpk - need to think about the above line. Worried that its going to sum the change frame to frame
+					// // which is not what we want. May need to record angle from nav x at start?
+					// double zRotation = Math.abs(visionSystem.getImageXOffset()) > 1 ?
+					// 	 visionSystem.getImageXOffset()/Math.abs(visionSystem.getImageXOffset())*0.1 : 0;
 
-						//  SmartDashboard.putNumber("xSpeed", 1.0*DEBUG_MULTIPLIER);
-						//  SmartDashboard.putNumber("ySpeed", 0.0);
-						//  SmartDashboard.putNumber("zSpeed", zRotation);
-						//  SmartDashboard.putNumber("gyro", desiredTrackAngle);
-	
 				    //wpk temp zero numbers out for testing
 				    //robotDrive.driveCartesian(0.0, 1.0*DEBUG_MULTIPLIER, zRotation,  desiredTrackAngle) ;
-				    robotDrive.driveCartesian(0.0, 0.3*DEBUG_MULTIPLIER, zRotation,  desiredTrackAngle) ;
 				    //robotDrive.driveCartesian(0.0, 0.4*DEBUG_MULTIPLIER, 0.0,  desiredTrackAngle) ;
 				    //robotDrive.driveCartesian(0.0, 0.0, 0.0, 0.0) ;
 
-	 
-			    }
-			    break ;
-
-			case Approaching :
-
-				if ( isCloseEnough() ) {
-					driveMode = DriveMode.Manual ;
-				} else {
-					// get the rotated rectangle for the alignment line from the web cam video
-					// if the center of the rotated rectangle is not close enough of the center of
-					// the robot (as computed from the cam image relative to the bot), then move the 
-					// bot left or right to compensate.
-					// note: we'll need to consider how fast to move the bot in these circumstances to make
-					// sure we don't overshoot the line. Maybe use a speed schedule?
-
-					// On the other hand, if the bot is aligned left right with the alignment line,
-					// then adjust the bot's orientation to keep the angle of the line relative to the bot near zero
-					// as we drive in.
-
-					// wpk - some of this code doesn't yet exist and will need to be created
-					xSpeed = OI.getThreshedPSX();
-					zSpeed = OI.getThreshedPSZ();
-					// targ = visionSystem.limeLight.getCamTranslation();
-					yRotation = visionSystem.getImageXOffset();
-					ySpeed = approachSpeedFactorToTarget();
-					
-					if(!visionSystem.targetIsPresent()){
-						//TODO alignment line code
-							xSpeed = 0;
-							zSpeed = 0;
-							ySpeed = 0;
-						driveMode = DriveMode.Manual;
-					}else{
-						if(Math.abs(yRotation) >= ALIGNMENT_ANGULAR_TOLERANCE){
-							zSpeed = ALIGNMENT_ROTATION_SPEED*yRotation/Math.abs(yRotation);
-						}else{
-							zSpeed = 0;
-					} 
-						if(Math.abs(xTrans) > 2){
-							xSpeed = -DEBUG_MULTIPLIER*xTrans/Math.abs(xTrans);
-						}else{
-							xSpeed = 0;
-					}
-					}
-					robotDrive.driveCartesian(0, ySpeed, zSpeed);
-
-
-					// System.out.println("zRotation: " + zRotation + " xSpeed: " + xSpeed + " distance: " + distanceFromCenter + " angle: " + angleOfAlignmentLine);
-					// robotDrive.driveCartesian( xSpeed, 0, zRotation) ;
-
+					break ;
 				}
-			    break ;
-
+				robotDrive.driveCartesian(xSpeed, ySpeed, zSpeed) ;
 		}
 
-	}
 	// Graph of this ramp function: https://www.desmos.com/calculator/xal57r1qdk
 	public double approachFunction(double angle){
 		return (-Math.pow(1.2,-Math.abs(angle))+1)*angle/Math.abs(angle);
@@ -574,6 +500,15 @@ public class DriveSubsystem extends Subsystem {
 			return max ;
 		}
 		return value ;
+	}
+
+	private double rampDrive(){
+		if(OI.getPlaystationX() > 0 || OI.getPlaystationY() > 0){
+			if((OI.getPlaystationX() > .33  && OI.getPlaystationX() < .66) || (OI.getPlaystationY() > .33 && OI.getPlaystationY() < .66)) return MID_RAMP;
+			else if(OI.getPlaystationX() > .66 || OI.getPlaystationY() > .66) return TOP_RAMP;
+			else return BOTTOM_RAMP;
+		}
+		else return 0;
 	}
 
 }
