@@ -49,12 +49,12 @@ public class DriveSubsystem extends Subsystem {
 	// Speed we will use for start of our approach
 	private final double APPROACH_SPEED_FACTOR = 0.6 ; // wpk - place holder value for now
 
-	private final double BOTTOM_RAMP = .2;
-	private final double MID_RAMP = .5;
-	private final double TOP_RAMP = .8;
+	private final double BOTTOM_RAMP = .3;
+	private final double MID_RAMP = .6;
+	private final double TOP_RAMP = 1.0;
 
 	private final double BOTTOM_RAMP_Z = .2;
-	private final double MID_RAMP_Z = .5;
+	private final double MID_RAMP_Z = .4;
 	private final double TOP_RAMP_Z = .8;
 	// Speed when outside approach distance
 	private final double FULL_SPEED_FACTOR = 1.0 ;
@@ -347,9 +347,11 @@ public class DriveSubsystem extends Subsystem {
 			
 			case Manual :
 			if(RobotMap.BUTTONS.auto) driveMode = DriveMode.Auto;
-				xSpeed = OI.getThreshedPSX() * rampDrive();
-				ySpeed = OI.getThreshedPSY() * rampDrive();
-				zSpeed = OI.getThreshedPSZ() * rampDrive(true);				
+			System.out.println(OI.getPlaystationY());
+			System.out.println(rampDriveX());
+				xSpeed = OI.getThreshedPSX() * rampDriveX();
+				ySpeed = OI.getThreshedPSY() * rampDriveY();
+				zSpeed = OI.getThreshedPSZ() * rampDriveZ();				
 				// if(OI.getPlaystation().getRawButtonPressed(4)){
 				// 	// visionSystem.switchLED();
 				// // 	SmartDashboard.putBoolean("Limelight light", !(visionSystem.limeLight.getLEDMode() == 1));
@@ -506,12 +508,22 @@ public class DriveSubsystem extends Subsystem {
 		return value ;
 	}
 
-	private double rampDrive(){
-		if(OI.getPlaystationX() > 0 || OI.getPlaystationY() > 0){
-			if((OI.getPlaystationX() > .33  && OI.getPlaystationX() < .66) || (OI.getPlaystationY() > .33 && OI.getPlaystationY() < .66)) return MID_RAMP;
-			else if(OI.getPlaystationX() > .66 || OI.getPlaystationY() > .66) return TOP_RAMP;
-			else return BOTTOM_RAMP;
-		}
-		else return 0;
+	private double rampDriveX(){
+		if(Math.abs(OI.getPlaystationX()) < .33) return BOTTOM_RAMP;
+		else if(Math.abs(OI.getPlaystationX()) <.66) return MID_RAMP;
+		else return TOP_RAMP;
+	}
+	private double rampDriveY(){
+		if(Math.abs(OI.getPlaystationY()) < .33)
+		 return BOTTOM_RAMP;
+		else if(Math.abs(OI.getPlaystationY()) < .66) 
+		return MID_RAMP;
+		else 
+		return TOP_RAMP;
+	}
+	private double rampDriveZ(){
+		if(Math.abs(OI.getPlaystationZ()) < .33) return BOTTOM_RAMP_Z;
+		else if(Math.abs(OI.getPlaystationZ()) <.66) return MID_RAMP_Z;
+		else return TOP_RAMP_Z;
 	}
 }

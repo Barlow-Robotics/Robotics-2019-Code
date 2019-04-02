@@ -31,9 +31,9 @@ public class LiftSubsystem extends Subsystem {
   enum StateEnum {Bottom, BottomToMiddle, Middle, MiddleToBottomleavingMiddle, MiddleToBottomWaitingBottom,  MiddleToTopLeavingMiddle, MiddleToTopWaitingTop, Top, TopToMiddle, StartState};
   public CommandEnum commandedState = CommandEnum.Bottom;
   public StateEnum currentState = StateEnum.StartState;
-  private final double UP_SPEED = 0.65;
-  private final double DOWN_SPEED = -0.25;
-  private final double STALL_SPEED = .2;
+  private final double UP_SPEED = 0.82;
+  private final double DOWN_SPEED = -0.35;
+  private final double STALL_SPEED = .3;
   
   public void lift(){
     SmartDashboard.putString("Current State", currentState.name());
@@ -145,7 +145,7 @@ public class LiftSubsystem extends Subsystem {
         }
       } 
     }else{
-      liftMotor.set(DOWN_SPEED - 0.3);
+      liftMotor.set(DOWN_SPEED);
     } 
   }
   public CommandEnum getLocation(){

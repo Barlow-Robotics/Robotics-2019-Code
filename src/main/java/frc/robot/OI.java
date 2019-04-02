@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj.Joystick;
  * interface to the commands and command groups that allow control of the robot.
  */
 public class OI {
-  public static double threshHoldValue = 0.1;
+  public static double threshHoldValue = 0.05;
 	//Playstation Controller Variable
   private static Joystick playstation = new Joystick(RobotMap.Controllers.PLAYSTATION_PORT);
   private static Joystick box = new Joystick(RobotMap.Controllers.BOX_PORT);
