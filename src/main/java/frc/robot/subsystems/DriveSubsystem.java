@@ -52,6 +52,10 @@ public class DriveSubsystem extends Subsystem {
 	private final double BOTTOM_RAMP = .2;
 	private final double MID_RAMP = .5;
 	private final double TOP_RAMP = .8;
+
+	private final double BOTTOM_RAMP_Z = .2;
+	private final double MID_RAMP_Z = .5;
+	private final double TOP_RAMP_Z = .8;
 	// Speed when outside approach distance
 	private final double FULL_SPEED_FACTOR = 1.0 ;
 	private final double ROTATION_SPEED = .05;
@@ -343,9 +347,9 @@ public class DriveSubsystem extends Subsystem {
 			
 			case Manual :
 			if(RobotMap.BUTTONS.auto) driveMode = DriveMode.Auto;
-				xSpeed = DEBUG_MULTIPLIER * OI.getThreshedPSX();
-				ySpeed = DEBUG_MULTIPLIER * OI.getThreshedPSY();
-				zSpeed = DEBUG_MULTIPLIER * OI.getThreshedPSZ();				
+				xSpeed = OI.getThreshedPSX() * rampDrive();
+				ySpeed = OI.getThreshedPSY() * rampDrive();
+				zSpeed = OI.getThreshedPSZ() * rampDrive(true);				
 				// if(OI.getPlaystation().getRawButtonPressed(4)){
 				// 	// visionSystem.switchLED();
 				// // 	SmartDashboard.putBoolean("Limelight light", !(visionSystem.limeLight.getLEDMode() == 1));
@@ -510,5 +514,4 @@ public class DriveSubsystem extends Subsystem {
 		}
 		else return 0;
 	}
-
 }
