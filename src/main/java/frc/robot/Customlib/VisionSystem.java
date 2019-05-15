@@ -90,7 +90,7 @@ public class VisionSystem {
 
 		try {
 			String json = jevois.readString() ;
-   		   // System.out.println(json) ;
+   		   //System.out.println(json) ;
 
 			String serialData = json ;
 			String[] records = serialData.split("\r\n") ;
@@ -159,10 +159,12 @@ public class VisionSystem {
 			double angle = bearingToTarget();
 			if (result < LIDAR_DISTANCE_THRESHOLD && Math.abs(angle) < LIDAR_BEARING_TOLERANCE) {
 				if (Math.abs(result - lidarDistance) < LIDAR_VISUAL_COMPARE_TOLERANCE) {
+					// System.out.println("Using lidar for distance");
 					result = lidarDistance;
 				}
 			}
 		}
+	// System.out.println(result);
 		return result;
 	}
 

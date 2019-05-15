@@ -48,7 +48,9 @@ public class Robot extends TimedRobot {
     // DriveSubsystem.getBackLeftMotor().setInverted(true);
     liftSubsystem.liftMotor.setInverted(true);
     
+    CameraServer.getInstance().startAutomaticCapture();
     CameraServer.getInstance().startAutomaticCapture();    
+    
     m_oi = new OI();
     m_chooser.setDefaultOption("Default Auto", new DriveCommand());
     m_chooser.addOption("My Auto", new ArmCommand());

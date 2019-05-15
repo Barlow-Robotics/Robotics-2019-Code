@@ -6,6 +6,7 @@ import frc.robot.RobotMap;
 import frc.robot.Customlib.*;
 import frc.robot.Customlib.LimeLight.Target3D;
 import frc.robot.commands.DriveCommand;
+import frc.robot.subsystems.LiftSubsystem.StateEnum;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.PWM;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
@@ -53,12 +54,16 @@ public class DriveSubsystem extends Subsystem {
 	private final double MID_RAMP = .6;
 	private final double TOP_RAMP = 1.0;
 
-	private final double BOTTOM_RAMP_Z = .2;
-	private final double MID_RAMP_Z = .4;
-	private final double TOP_RAMP_Z = .8;
+	private final double MIDDLE_SCALAR = 0.6;
+	private final double TOP_SCALAR = 0.4;
+
+
+	private final double BOTTOM_RAMP_Z = .3;
+	private final double MID_RAMP_Z = .6;
+	private final double TOP_RAMP_Z = 1.0;
 	// Speed when outside approach distance
 	private final double FULL_SPEED_FACTOR = 1.0 ;
-	private final double ROTATION_SPEED = .05;
+	private final double ROTATION_SPEED = .3;
 	// Tolerence around centering bot to alignment line
 	private final double ALIGNMENT_LATERAL_TOLERANCE = 4.0 ;  // wpk - need to figure out what a good value is.
 	//private double ALIGNMENT_TOLERANCE_P = 0.07;
@@ -76,7 +81,10 @@ public class DriveSubsystem extends Subsystem {
 	// consult the WPILib docs on feed forward or look at the PIDBase code.
 	private final double KF = 1.0 / MAX_ENCODER;
 
-	public double X_OFFSET = -.85;
+	public static final double X_OFFSET = 13;
+
+	private double MAX_DIST = 72.0;
+	private double MIN_DIST = 30.0;
     ////////////////////
 	// Member variables
 	////////////////////
@@ -272,7 +280,7 @@ public class DriveSubsystem extends Subsystem {
 	}
 	public void setModePositioning() {
 //		driveMode = DriveMode.Positioning;
-		System.out.println("In positioning mode");
+		// System.out.println("In positioning mode");
 	}
 
 	private boolean isInPosition() {
@@ -328,7 +336,6 @@ public class DriveSubsystem extends Subsystem {
 		else
 			leds.setRaw(0);
 		SmartDashboard.putNumber("X Translation", xTrans);
-		SmartDashboard.putNumber("X offset", visionSystem.getImageXOffset());
 		// SmartDashboard.putNumber("FL Motor", frontLeftMotor.get());
 		// SmartDashboard.putNumber("FR Motor", frontRightMotor.get());
 		// SmartDashboard.putNumber("BL Motor", backLeftMotor.get());
@@ -342,16 +349,14 @@ public class DriveSubsystem extends Subsystem {
 		double xSpeed = 0.0 ;
 		double ySpeed = 0.0 ;
 		double zSpeed = 0.0 ;
-
         switch ( driveMode ) {
 			
 			case Manual :
-			if(RobotMap.BUTTONS.auto) driveMode = DriveMode.Auto;
-			System.out.println(OI.getPlaystationY());
-			System.out.println(rampDriveX());
-				xSpeed = OI.getThreshedPSX() * rampDriveX();
-				ySpeed = OI.getThreshedPSY() * rampDriveY();
-				zSpeed = OI.getThreshedPSZ() * rampDriveZ();				
+			if(OI.getPlaystation().getRawButton(RobotMap.Controllers.AUTO_BUTTON)) 
+			   driveMode = DriveMode.Auto;
+				xSpeed = OI.getThreshedPSX() * rampDriveX() * liftScalar();
+				ySpeed = -OI.getThreshedPSY() * rampDriveY() * liftScalar();
+				zSpeed = OI.getThreshedPSZ() * 0.7 * liftScalar();				
 				// if(OI.getPlaystation().getRawButtonPressed(4)){
 				// 	// visionSystem.switchLED();
 				// // 	SmartDashboard.putBoolean("Limelight light", !(visionSystem.limeLight.getLEDMode() == 1));
@@ -398,22 +403,29 @@ public class DriveSubsystem extends Subsystem {
 			    break ;
 
 			case Auto :
-			if(!RobotMap.BUTTONS.auto) driveMode = DriveMode.Manual;
-			double yRotation = visionSystem.getImageXOffset();
+			if(!OI.getPlaystation().getRawButton(RobotMap.Controllers.AUTO_BUTTON)) 
+			    driveMode = DriveMode.Manual;
+				double yRotation = visionSystem.getImageXOffset() + distanceOffsetCalc(visionSystem.distanceToTarget());
+			
 				if(!visionSystem.targetIsPresent()){
 					xSpeed = 0;
 					zSpeed = 0;
-					// if(OI.getThreshedPSY() < 0)
-					//     ySpeed = -OI.getThreshedPSY()* approachSpeedFactorToTarget() * DEBUG_MULTIPLIER;
-					// else 
-					//     ySpeed = -OI.getThreshedPSY() * DEBUG_MULTIPLIER;
-
-				}else{
 					if(OI.getThreshedPSY() < 0)
-						ySpeed = -OI.getThreshedPSY()* approachSpeedFactorToTarget() * DEBUG_MULTIPLIER;
+					    ySpeed = -OI.getThreshedPSY()* approachSpeedFactorToTarget();
 					else 
-						ySpeed = -OI.getThreshedPSY() * DEBUG_MULTIPLIER;
+					    ySpeed = -OI.getThreshedPSY();
+				
+				}else{
+					if(OI.getThreshedPSY() < 0){
+						ySpeed = -OI.getThreshedPSY()* approachSpeedFactorToTarget();
+						// System.out.println("PSY < 0: " + visionSystem.getLidarDist());
+					}
+					else{
+						ySpeed = -OI.getThreshedPSY() * rampDriveY();
+						// System.out.println("PSY >= 0: " + visionSystem.getLidarDist());
+					}
 					if(Math.abs(yRotation) >= ALIGNMENT_ANGULAR_TOLERANCE){
+						// System.out.println("setting z to non-zero");
 						zSpeed =  clamp((yRotation/20) * ROTATION_SPEED ,-ROTATION_SPEED, ROTATION_SPEED);
 					}else{
 						zSpeed = 0;
@@ -525,5 +537,24 @@ public class DriveSubsystem extends Subsystem {
 		if(Math.abs(OI.getPlaystationZ()) < .33) return BOTTOM_RAMP_Z;
 		else if(Math.abs(OI.getPlaystationZ()) <.66) return MID_RAMP_Z;
 		else return TOP_RAMP_Z;
+	}
+	private double distanceOffsetCalc(double distance){
+		if(distance < MIN_DIST){
+			return X_OFFSET;
+		}
+		else if(distance > MAX_DIST){
+			return 0;
+		}
+		else{
+			return (X_OFFSET*(MAX_DIST - distance)) / (MAX_DIST - MIN_DIST);
+		}
+	}
+	private double liftScalar(){
+		if(Robot.liftSubsystem.currentState == StateEnum.Middle || Robot.liftSubsystem.currentState == StateEnum.BottomToMiddle)
+		 return MIDDLE_SCALAR;
+		else if(Robot.liftSubsystem.currentState == StateEnum.Top || Robot.liftSubsystem.currentState == StateEnum.MiddleToTopLeavingMiddle || Robot.liftSubsystem.currentState == StateEnum.MiddleToTopWaitingTop)
+		 return TOP_SCALAR;
+		else
+		 return 1;
 	}
 }

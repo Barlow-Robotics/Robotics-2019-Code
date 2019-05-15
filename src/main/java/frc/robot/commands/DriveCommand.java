@@ -26,23 +26,10 @@ public class DriveCommand extends Command {
 
     // Called repeatedly when this Command is scheduled to run
     protected void execute() {
-
-
-        if (OI.getPlaystation().getRawButton(10)) {
-            if ( Robot.driveSubsystem.isAutoAvailable() ) {
-                Robot.driveSubsystem.SetModeAutoApproach();
-            }
-        }
-        if(OI.getPlaystation().getRawButton(2)){
-            Robot.driveSubsystem.setModePositioning();
-        }
-        if (Math.abs(OI.getPlaystationX()) >= .2 || Math.abs(OI.getPlaystationY()) >= .2
-                || Math.abs(OI.getPlaystationZ()) >= .2)
-            Robot.driveSubsystem.SetModeManual();
         
-        if(OI.getBox().getRawButtonPressed(10)){
-            // Robot.driveSubsystem.visionSystem.limeLight.switchLED();
-        }
+        // if(OI.getBox().getRawButtonPressed(10)){
+        //     // Robot.driveSubsystem.visionSystem.limeLight.switchLED();
+        // }
         
         Robot.driveSubsystem.doDriving();
         // System.out.println(DriveSubsystem.autoEnable);
